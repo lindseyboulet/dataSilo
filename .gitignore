@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# anything with a txt extension 
+* .txt
+# ignore output folder
+/output

@@ -1,0 +1,5 @@
+bins,Time_mean,stage,SpO2_mean,SpO2_sem,MAP_mean,MAP_sem,MCAv_mean,MCAv_sem,PCAv_mean,PCAv_sem,HR_mean,HR_sem,nBeats,FeCO2_mean,FeCO2_sem,Volume_mean,Volume_sem,VT_mean,VT_sem,Fb_mean,Fb_sem,VI_mean,VI_sem,VE_mean,VE_sem,PETCO2_mean,PETCO2_sem,PETO2_mean,PETO2_sem,VO2_mean,VO2_sem,VCO2_mean,VCO2_sem,RER_mean,RER_sem,PO2_mean,PO2_sem,PCO2_mean,PCO2_sem,Barometric.Pressure_mean,Barometric.Pressure_sem,nBreaths
+"(1877,1892]",1884.724392,bl,98.4,0,76.7,0.5,61.4,0.5,60.4,0.6,42.5,4.7,16,3.3,NA,2.1,NA,-2.1,NA,5.1,NA,11.6,NA,11.3,NA,34,NA,93.1,NA,0.405,NA,0.294,NA,0.725925926,NA,93.8,NA,33.8,NA,732.5,NA,1
+"(2162,2177]",2169.720402,2,99.4,0,78.4,0.5,66.2,0.4,64.6,0.5,49.7,2.7,13,3.7,0.1,1.9,0.1,-2.1,0.1,6,0.7,14.4,2.3,25.5,4,36.4,0,331.5,0.8,-8,1,1,0,0,0,332.1,0.6,36.1,0.3,732.5,0,2
+"(2297,2312]",2304.536088,4,99.4,0,80.6,0.9,70.7,1.2,69.5,1.1,52,2.7,14,4.7,NA,2.4,NA,-3.2,NA,5.3,NA,18.4,NA,33.4,NA,39.3,NA,336.9,NA,-11,NA,1,NA,0,NA,337.9,NA,38.5,NA,732.5,NA,1
+"(2477,2492]",2484.695374,6,99.4,0,80.9,0.6,79.1,1,80.3,0.7,55.3,2.2,14,5.5,0,2.9,0.1,-3,0.1,7.9,0.3,26.4,1.4,48.8,2.6,40.7,0,343.1,0.7,-16,1,2,0,0,0,343.6,0.8,40.5,0.1,732.5,0,2
