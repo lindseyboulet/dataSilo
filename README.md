@@ -18,7 +18,17 @@ These r libraries are required
 
 ### Installing
 
-Install the libraries above and load data into \rawData folder
+Install the libraries above and load data into dataSilo\rawData folder
+  File name format: typeOfData_subjectID_cond1_cond2.txt
+    typeOfData: breath, beat or burst
+      eg. breath_07_hx_pre.txt
+
+### Deployment
+
+1. Open dataSilo.Rproj
+2. From the file explorer in RStudion, open dataSilo x.y.z.R 
+3. Click run app in the script editor (source) pane
+  * be sure to run app externally (from drop down menu next to "run")
 
 ## Authors
 
@@ -26,12 +36,13 @@ Install the libraries above and load data into \rawData folder
 
 ## License
 
-This project is licensed under the MIT License - see the [license.md](license.md) file for details
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
 
 ## Acknowledgments
 
 * CPLEAP
+* T Stuckless
+* C Brown
 * T Vermeulen
 
 # dataSilo
