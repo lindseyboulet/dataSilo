@@ -18,10 +18,10 @@ These r libraries are required
 
 ### Installing
 
-Install the libraries above and load data into dataSilo\rawData folder
-  File name format: typeOfData_subjectID_cond1_cond2.txt
-    typeOfData: breath, beat or burst
-      eg. breath_07_hx_pre.txt
+Install the libraries above and load data into dataSilo\rawData folder <br>
+  File name format: typeOfData_subjectID_cond1_cond2.txt <br>
+    typeOfData: breath, beat or burst <br>
+      eg. breath_07_hx_pre.txt 
 
 ### Deployment
 
