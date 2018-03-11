@@ -41,8 +41,8 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 ## Acknowledgments
 
 * Stuckless T
-* Vermeulen TD
 * Brown CV
+* Vermeulen TD
 * Foster GE
 
 # dataSilo
