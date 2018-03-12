@@ -708,9 +708,9 @@ averageData <- reactive({
         
         
         cvData <- mutate(cvData, bins = cut(cvData$Time,
-                             breaks = breaks, dig.lab = 4))
+                             breaks = breaks, dig.lab = 4, include.lowest = TRUE))
         respData <- mutate(respData, bins = cut(respData$Time,
-                                            breaks = breaks, dig.lab = 4))
+                                            breaks = breaks, dig.lab = 4, include.lowest = TRUE))
         
         cvDataMean <- summarise_all(group_by(cvData, bins),
                                     funs(mean(., na.rm = TRUE)))
@@ -756,7 +756,8 @@ averageData <- reactive({
           
           burstData$bins <- cut(burstData[,1],
                                 breaks = seq(from = min(cvData$Time, na.rm = TRUE),
-                                to = max(cvData$Time, na.rm = TRUE), by = input$bin), dig.lab = 4)
+                                to = max(cvData$Time, na.rm = TRUE), by = input$bin), dig.lab = 4,
+                                include.lowest = TRUE)
          
           burstDataMean <- summarise_all(group_by(burstData, bins),
                                          funs(mean(., na.rm = TRUE)))
