@@ -803,11 +803,11 @@ averageData <- reactive({
         finalData[,oneDigRange] <- round(finalData[,oneDigRange], 1)
         finalData[,twoDigRange] <- round(finalData[,twoDigRange], 2)
         
-        if(!dir.exists(here::here("interactiveDataAveraging", "output"))){
-          dir.create(here::here("interactiveDataAveraging", "output"))
-          dir.create(here::here("interactiveDataAveraging", "output", "averageData"))
-          dir.create(here::here("interactiveDataAveraging", "output", "selectData"))
-          dir.create(here::here("interactiveDataAveraging", "output", "cleanData"))
+        if(!dir.exists(here::here("output"))){
+          dir.create(here::here("output"))
+          dir.create(here::here("output", "averageData"))
+          dir.create(here::here("output", "selectData"))
+          dir.create(here::here("output", "cleanData"))
 
         }
         finalData <- finalData[which(complete.cases(finalData$bins)),]
@@ -892,15 +892,15 @@ averageData <- reactive({
     
 observeEvent(input$saveAverage, {
         if(noCond2()== 1){
-        fileName <- paste(here::here("interactiveDataAveraging", "output", "averageData"),"/",
+        fileName <- paste(here::here("output", "averageData"),"/",
               input$subjectId,"_", input$cond1,
               '_', input$bin,'sec_mean_all.csv', sep = "")
         }else if(noCond2()== 2){
-          fileName <-paste(here::here("interactiveDataAveraging", "output", "averageData"), "/",
+          fileName <-paste(here::here("output", "averageData"), "/",
                 input$subjectId,"_", input$cond1,
                                  "_", input$cond2,'_', input$bin,'sec_mean_all.csv', sep = "")
         }else{
-          fileName <-paste(here::here("interactiveDataAveraging", "output", "averageData"),"/",
+          fileName <-paste(here::here("output", "averageData"),"/",
                 input$subjectId,"_", input$cond1,"_",
                                  input$cond2,"_", input$cond3,'_',
                 input$bin,'sec_mean_all.csv', sep = "")
@@ -916,15 +916,15 @@ observeEvent(input$saveAverage, {
 
 observeEvent(input$saveSelect, {
   if(noCond2()== 1){
-    fileName <- paste(here::here("interactiveDataAveraging", "output", "selectData"),"/",
+    fileName <- paste(here::here("output", "selectData"),"/",
                       input$subjectId,"_", input$cond1,
                       '_', input$bin,'sec_mean_select.csv', sep = "")
   }else if(noCond2()== 2){
-    fileName <-paste(here::here("interactiveDataAveraging", "output", "selectData"), "/",
+    fileName <-paste(here::here("output", "selectData"), "/",
                      input$subjectId,"_", input$cond1,
                      "_", input$cond2,'_', input$bin,'sec_mean_select.csv', sep = "")
   }else{
-    fileName <-paste(here::here("interactiveDataAveraging", "output", "selectData"),"/",
+    fileName <-paste(here::here("output", "selectData"),"/",
                      input$subjectId,"_", input$cond1,"_",
                      input$cond2,"_", input$cond3,'_',
                      input$bin,'sec_mean_select.csv', sep = "")
@@ -939,13 +939,13 @@ observeEvent(input$saveSelect, {
     observeEvent(input$saveClean,{     #### called from UI
 
         if(noCond2()== 1){
-          fileName <-paste(here::here("interactiveDataAveraging", "output", "cleanData"),"/",
+          fileName <-paste(here::here("output", "cleanData"),"/",
                 input$subjectId,"_", input$cond1, sep = "")
         }else if(noCond2()== 2){
-          fileName <-paste(here::here("interactiveDataAveraging", "output", "cleanData"), "/",
+          fileName <-paste(here::here("output", "cleanData"), "/",
                 input$subjectId,"_", input$cond1, sep = "")
         }else{
-          fileName <- paste(here::here("interactiveDataAveraging", "output", "cleanData"),"/",
+          fileName <- paste(here::here("output", "cleanData"),"/",
                 input$subjectId,"_", input$cond1,"_",
                 input$cond2,"_", input$cond3, sep = "")
         }
@@ -989,7 +989,7 @@ observeEvent(input$saveSelect, {
 # Save Raw Figures ------------------------------------------------------
     
     observeEvent(input$createRawFigs,{ 
-      dataFilePath <- here::here("interactiveDataAveraging", "output", "cleanData") 
+      dataFilePath <- here::here("output", "cleanData") 
       fileID <- list.files(path = dataFilePath, pattern = ".csv") 
       fileID <- strtrim(fileID, nchar(fileID)-4)
       fileIndex <- as.data.frame(matrix(as.character(unlist(strsplit(fileID, "_"))), 
@@ -999,13 +999,13 @@ observeEvent(input$saveSelect, {
       
   for(i in seq(1, nrow(fileIndex), len)){
         if(ncol(fileIndex) == 4){
-          fileName <-paste(here::here("interactiveDataAveraging", "output", "cleanData"),"/",
+          fileName <-paste(here::here("output", "cleanData"),"/",
                            fileIndex[i,1],"_", fileIndex[i,2], sep = "")
         }else if(ncol(fileIndex) == 5){
-          fileName <-paste(here::here("interactiveDataAveraging", "output", "cleanData"), "/",
+          fileName <-paste(here::here("output", "cleanData"), "/",
                            fileIndex[i,1],"_", fileIndex[i,2],"_", fileIndex[i,3],  sep = "")
         }else{
-          fileName <-paste(here::here("interactiveDataAveraging", "output", "cleanData"), "/",
+          fileName <-paste(here::here("output", "cleanData"), "/",
                            fileIndex[i,1],"_", fileIndex[i,2],"_", fileIndex[i,3],
                            fileIndex[i,4], sep = "")
         }
@@ -1046,7 +1046,7 @@ observeEvent(input$saveSelect, {
     
 observeEvent(input$createMeanFigs,{ 
 
-  dataFilePath <- here::here("interactiveDataAveraging", "output", "averageData") 
+  dataFilePath <- here::here("output", "averageData") 
   fileNames <- list.files(path = dataFilePath, pattern = ".csv", full.names = TRUE) 
   '%!in%' <- function(x,y){!('%in%'(x,y))}
   
