@@ -61,9 +61,22 @@ if(length(type == 3)) {
     colnames(burstDataSample)[which(!is.na(match(colnames(burstDataSample), "TimeDate")))] <- "Time"
 }
 
+header <- dashboardHeader()
+anchor <- tags$a(href='http://www.example.com',
+                 tags$img(src="logo2.png", width = 50, height = 50, align = 'left'),
+                 'Silo')
+
+header$children[[2]]$children <- tags$div(
+  tags$head(tags$style(HTML('.name {font-family: "Georgia", Times, "Times New Roman", serif;
+                  font-weight: bold;
+                  font-size: 48px;}'))),
+  anchor,
+  class = 'name')
+
 # Define UI
 ui <- dashboardPage(skin = "black",
-                    dashboardHeader(disable = FALSE),
+                    title="Silo - Interactive Signal Averaging",
+                header,                    
                     dashboardSidebar(width = 150,
                                      numericInput("fileStart", label = "File Start", value = NA),
                                      numericInput("fileEnd", label = "File End", value = NA),
@@ -888,6 +901,13 @@ averageData <- reactive({
      selectedAv[,c(1:2,ncol(selectedAv), 3:(ncol(selectedAv)-1)) ]
      })
 
+
+output$logo <- renderText({
+  c('<img src="',
+      "https://openclipart.org/download/279572/Silo.svg",
+    '">'
+    )
+})        
  # Save Average Data -------------------------------------------------------   
     
 observeEvent(input$saveAverage, {
