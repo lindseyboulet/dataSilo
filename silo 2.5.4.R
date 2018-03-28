@@ -62,15 +62,14 @@ if(length(type == 3)) {
 }
 
 header <- dashboardHeader()
-anchor <- tags$a(href='http://www.example.com',
-                 tags$img(src="logo2.png", width = 50, height = 50, align = 'left'),
+anchor <- tags$a(tags$img(src="logo2.png", width = 50, height = 50, align = 'left'),
                  'silo')
 
 header$children[[2]]$children <- tags$div(
   tags$head(tags$style(HTML('.name {font-family: "Georgia", Times, "Times New Roman", serif;
                   font-weight: bold;
                   font-size: 48px;
-                  color:Black !important;}'))),
+                  color:black;}'))),
   anchor,
   class = 'name')
 
@@ -101,7 +100,7 @@ ui <- dashboardPage(skin = "black",
                                     checkboxInput("burstDataAsk", label = "Include Burst Data", value = FALSE),
                                     checkboxInput("appendAsk", label = "Append Id tag to Output File", value = FALSE),
                                     conditionalPanel(condition = "input.appendAsk",
-                                                     textInput("appendTag", label = "Append Tag")
+                                                     textInput("appendTag", label = "Append Tag", value = NULL)
                                     )
                                                      
 
@@ -931,7 +930,7 @@ observeEvent(input$saveAverage, {
                                  input$cond2,"_", input$cond3,'_',
                 input$bin,'sec_mean_all.csv', sep = "")
         }
-        if(input$appendAsk){paste(strtrim(fileName, nchar(fileName)-4),"_", input$appendTag, ".csv", sep = "" )}
+  if(input$appendAsk==TRUE){fileName <- paste(strtrim(fileName, nchar(fileName)-4),"_", input$appendTag, ".csv", sep = "" )}
   write.csv(averageData(), fileName, row.names = FALSE)
 
 
@@ -956,7 +955,7 @@ observeEvent(input$saveSelect, {
                      input$cond2,"_", input$cond3,'_',
                      input$bin,'sec_mean_select.csv', sep = "")
   }
-  if(input$appendAsk){paste(strtrim(fileName, nchar(fileName)-4),"_", input$appendTag, ".csv", sep = "" )}
+  if(input$appendAsk==TRUE){fileName <- paste(strtrim(fileName, nchar(fileName)-4),"_", input$appendTag, ".csv", sep = "" )}
   write.csv(selectData(), fileName, row.names = FALSE)
   
 })
@@ -994,7 +993,8 @@ observeEvent(input$saveSelect, {
       timeCol <- which(colnames(respData) == "Time")
       respColRange <- c(timeCol, respColRange)
       respData <- respData[,respColRange]
-
+      if(input$appendAsk){fileName <- paste(fileName,"_", input$appendTag, sep = "" )}
+      
       if(input$burstDataAsk == TRUE){
       burstData <- burstPlotData()
       burstData    <- burstData[ valsBurst$burstKeepRows, , drop = FALSE]
@@ -1005,7 +1005,6 @@ observeEvent(input$saveSelect, {
       timeCol2 <- timeCol2[1]
       burstColRange <- c(timeCol2, burstColRange)
       burstData <- burstData[, burstColRange]
-      if(input$appendAsk){paste(strtrim(fileName, nchar(fileName)-4),"_", input$appendTag, ".csv", sep = "" )}
       write.csv(burstData, paste(fileName, "_clean_burst.csv", sep = ""), row.names = FALSE)
       }
       write.csv(cvData, paste(fileName, "_clean_beat.csv", sep = ""), row.names = FALSE)
@@ -1019,54 +1018,69 @@ observeEvent(input$saveSelect, {
       dataFilePath <- here::here("output", "cleanData") 
       fileID <- list.files(path = dataFilePath, pattern = ".csv") 
       fileID <- strtrim(fileID, nchar(fileID)-4)
-      fileIndex <- as.data.frame(matrix(as.character(unlist(strsplit(fileID, "_"))), 
-                                        ncol = sapply(gregexpr("_", fileID[1]), length) +1, byrow = TRUE))
-      fileIndex  <- japply(fileIndex, which(sapply(fileIndex, class)=="factor"), as.character)
-      len <- length(unique(fileIndex[,ncol(fileIndex)]))
-      
-  for(i in seq(1, nrow(fileIndex), len)){
-        if(ncol(fileIndex) == 4){
-          fileName <-paste(here::here("output", "cleanData"),"/",
-                           fileIndex[i,1],"_", fileIndex[i,2], sep = "")
-        }else if(ncol(fileIndex) == 5){
-          fileName <-paste(here::here("output", "cleanData"), "/",
-                           fileIndex[i,1],"_", fileIndex[i,2],"_", fileIndex[i,3],  sep = "")
-        }else{
-          fileName <-paste(here::here("output", "cleanData"), "/",
-                           fileIndex[i,1],"_", fileIndex[i,2],"_", fileIndex[i,3],
-                           fileIndex[i,4], sep = "")
-        }
-      
-        cvDF <- read.csv(paste(fileName, "_clean_beat.csv", sep = ""))
-        respDF <- read.csv(paste(fileName, "_clean_breath.csv", sep = ""))
-        if(len == 3){burstDF <- read.csv(paste(fileName, "_clean_burst.csv", sep = ""))}
-        figNum <- ncol(cvDF) + ncol(respDF)-2
-        if(len == 3){figNum <- figNum + ncol(burstDF)}
-        
-        cvFigList <- list()
-        for(j in 1:(ncol(cvDF)-1)){
-          cvFigList[[j]] <- ggplot(cvDF, aes_string(x="Time", y = colnames(cvDF)[j+1]))+
-            geom_point(size = 0.65) + theme(axis.title.x = element_blank())
-        }
-        respFigList <- list()
-        for(j in 1:(ncol(respDF)-1)){
-          respFigList[[j]] <- ggplot(respDF, aes_string(x="Time", y = colnames(respDF)[j+1]))+
-            geom_point(size = 0.65) + theme(axis.title.x = element_blank())
-        }
-        figList <- c(cvFigList, respFigList)
-        if(len == 3){
-          burstFigList <- list()
-          for(j in 1:(ncol(burstDF)-1)){
-            burstFigList[[j]] <- ggplot(burstDF, aes_string(x="Time", y = colnames(burstDF)[j+1]))+
-              geom_point(size = 0.65) + theme(axis.title.x = element_blank())
-          }
-          figList <- c(figList, burstFigList)
-        }
-        glist <- lapply(figList, ggplotGrob)
-        if(input$appendAsk){paste(strtrim(fileName, nchar(fileName)-4),"_", input$appendTag, ".csv", sep = "" )}
-        ggsave(paste(fileName, "_clean.pdf", sep = ""), marrangeGrob(grobs = glist, nrow=3, ncol=1))
-        
+      mat <- grep("_",fileID)
+      vec <- vector(length = length(mat))
+      for(i in mat){
+        vec[i] <- length(unlist(strsplit(fileID[i], "_")))
       }
+      maxCols <- max(vec)
+      fileIndex <- as.data.frame(matrix(nrow = length(vec), 
+                                        ncol = maxCols, byrow = FALSE))
+      fileIndex  <- japply(fileIndex, which(sapply(fileIndex, class)=="factor"), as.character)
+      suppressWarnings(for (i in mat){
+        j <- unlist(strsplit(fileID[i], "_"))
+        if(i != maxCols){j <- c(j, rep("", maxCols-i))}
+        fileIndex[i,] <-j
+      })
+      len <- length(unique(fileIndex[,ncol(fileIndex)]))
+      if(length(which(fileIndex[,ncol(fileIndex)]==""))!= 0){len <- len-1}
+      iterator <- rep(seq(1,(nrow(fileIndex)/len)), each = len)
+      ll <- 1
+  for(i in seq(1,(nrow(fileIndex)/len))){
+    dList <- list()
+    figList <- list()
+    fileName1 <- paste(fileIndex[ll,], collapse = "_")
+    while(substr(fileName1, nchar(fileName1),nchar(fileName1)) == "_"){
+      fileName1 <- substr(fileName1, 1, nchar(fileName1)-1)
+    }
+    fileName2 <- paste(fileIndex[ll+1,], collapse = "_")
+    while(substr(fileName2, nchar(fileName2),nchar(fileName2)) == "_"){
+      fileName2 <- substr(fileName2, 1, nchar(fileName2)-1)
+    }
+    
+    fileName1 <- paste(here::here("output", "cleanData"),"/",fileName1, ".csv", sep = "")
+    fileName2 <- paste(here::here("output", "cleanData"),"/",fileName2, ".csv", sep = "")
+    
+    dList[[1]] <- read.csv(fileName1)
+    dList[[2]] <- read.csv(fileName2)
+
+    if(len == 3){
+      fileName3 <- paste(fileIndex[ll+2,], collapse = "_")
+      while(substr(fileName3, nchar(fileName3),nchar(fileName3)) == "_"){
+        fileName3 <- substr(fileName3, 1, nchar(fileName3)-1)
+      }
+      fileName3 <- paste(here::here("output", "cleanData"),"/",fileName3, ".csv", sep = "")
+      dList[[3]] <- read.csv(fileName3)
+
+    }
+    fileName <- paste(fileIndex[ll,-((maxCols-1):maxCols)], collapse = "_")
+    while(substr(fileName, nchar(fileName),nchar(fileName)) == "_"){
+      fileName <- substr(fileName, 1, nchar(fileName)-1)
+    }
+    fileName <- paste(here::here("output", "cleanData"),"/",fileName, "_clean.pdf", sep = "")
+    
+    for(k in 1:len){
+        for(j in 1:(ncol(dList[[k]])-1)){
+          figList[[length(figList)+1]] <-ggplot(dList[[k]], aes_string(x="Time", y = colnames(dList[[k]])[j+1]))+
+            geom_point(size = 0.65) + theme(axis.title.x = element_blank())
+        
+        }
+    }    
+      
+        glist <- lapply(figList, ggplotGrob)
+        ggsave(fileName, marrangeGrob(grobs = glist, nrow=3, ncol=1))
+        ll <- ll+len
+  }
       })
 
 
@@ -1092,7 +1106,6 @@ observeEvent(input$createMeanFigs,{
      z<- z+1
     }
     glist <- lapply(figList, ggplotGrob)
-    if(input$appendAsk){paste(strtrim(fileName, nchar(fileName)-4),"_", input$appendTag, ".csv", sep = "" )}
     ggsave(paste(substr(i,1, nchar(i)-4), ".pdf", sep = ""), marrangeGrob(grobs = glist, nrow=3, ncol=1))
   }
 })
