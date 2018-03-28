@@ -64,18 +64,19 @@ if(length(type == 3)) {
 header <- dashboardHeader()
 anchor <- tags$a(href='http://www.example.com',
                  tags$img(src="logo2.png", width = 50, height = 50, align = 'left'),
-                 'Silo')
+                 'silo')
 
 header$children[[2]]$children <- tags$div(
   tags$head(tags$style(HTML('.name {font-family: "Georgia", Times, "Times New Roman", serif;
                   font-weight: bold;
-                  font-size: 48px;}'))),
+                  font-size: 48px;
+                  color:Black !important;}'))),
   anchor,
   class = 'name')
 
 # Define UI
 ui <- dashboardPage(skin = "black",
-                    title="Silo - Interactive Signal Averaging",
+                    title="silo - Interactive Signal Averaging",
                 header,                    
                     dashboardSidebar(width = 150,
                                      numericInput("fileStart", label = "File Start", value = NA),
