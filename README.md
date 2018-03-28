@@ -1,4 +1,4 @@
-# Silo - Interactive Signal Averaging App
+# silo - Interactive Signal Averaging App
 
 This app accepts takes data exported from labchart and allows the user to pull cardiovascular and respiratory data points based off physiological triggers.  It then averages the data and allows the user to export the data in either csv form or in the form of a figure. 
 
