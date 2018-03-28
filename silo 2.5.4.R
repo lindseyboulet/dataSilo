@@ -98,7 +98,12 @@ ui <- dashboardPage(skin = "black",
                                                    choices = unique(fileIndex$V5),
                                                    selectize = TRUE)
                                      ),
-                                    checkboxInput("burstDataAsk", label = "Include Burst Data", value = FALSE)
+                                    checkboxInput("burstDataAsk", label = "Include Burst Data", value = FALSE),
+                                    checkboxInput("appendAsk", label = "Append Id tag to Output File", value = FALSE),
+                                    conditionalPanel(condition = "input.appendAsk",
+                                                     textInput("appendTag", label = "Append Tag")
+                                    )
+                                                     
 
                                      
       ),      
@@ -926,6 +931,7 @@ observeEvent(input$saveAverage, {
                                  input$cond2,"_", input$cond3,'_',
                 input$bin,'sec_mean_all.csv', sep = "")
         }
+        if(input$appendAsk){paste(strtrim(fileName, nchar(fileName)-4),"_", input$appendTag, ".csv", sep = "" )}
   write.csv(averageData(), fileName, row.names = FALSE)
 
 
@@ -950,7 +956,7 @@ observeEvent(input$saveSelect, {
                      input$cond2,"_", input$cond3,'_',
                      input$bin,'sec_mean_select.csv', sep = "")
   }
-
+  if(input$appendAsk){paste(strtrim(fileName, nchar(fileName)-4),"_", input$appendTag, ".csv", sep = "" )}
   write.csv(selectData(), fileName, row.names = FALSE)
   
 })
@@ -999,7 +1005,7 @@ observeEvent(input$saveSelect, {
       timeCol2 <- timeCol2[1]
       burstColRange <- c(timeCol2, burstColRange)
       burstData <- burstData[, burstColRange]
-      
+      if(input$appendAsk){paste(strtrim(fileName, nchar(fileName)-4),"_", input$appendTag, ".csv", sep = "" )}
       write.csv(burstData, paste(fileName, "_clean_burst.csv", sep = ""), row.names = FALSE)
       }
       write.csv(cvData, paste(fileName, "_clean_beat.csv", sep = ""), row.names = FALSE)
@@ -1057,6 +1063,7 @@ observeEvent(input$saveSelect, {
           figList <- c(figList, burstFigList)
         }
         glist <- lapply(figList, ggplotGrob)
+        if(input$appendAsk){paste(strtrim(fileName, nchar(fileName)-4),"_", input$appendTag, ".csv", sep = "" )}
         ggsave(paste(fileName, "_clean.pdf", sep = ""), marrangeGrob(grobs = glist, nrow=3, ncol=1))
         
       }
@@ -1085,6 +1092,7 @@ observeEvent(input$createMeanFigs,{
      z<- z+1
     }
     glist <- lapply(figList, ggplotGrob)
+    if(input$appendAsk){paste(strtrim(fileName, nchar(fileName)-4),"_", input$appendTag, ".csv", sep = "" )}
     ggsave(paste(substr(i,1, nchar(i)-4), ".pdf", sep = ""), marrangeGrob(grobs = glist, nrow=3, ncol=1))
   }
 })
