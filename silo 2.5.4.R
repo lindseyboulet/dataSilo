@@ -1029,7 +1029,7 @@ observeEvent(input$saveSelect, {
       fileIndex  <- japply(fileIndex, which(sapply(fileIndex, class)=="factor"), as.character)
       suppressWarnings(for (i in mat){
         j <- unlist(strsplit(fileID[i], "_"))
-        if(i != maxCols){j <- c(j, rep("", maxCols-i))}
+        if(vec[i] != maxCols){j <- c(j, rep("", (maxCols-i)))}
         fileIndex[i,] <-j
       })
       len <- length(unique(fileIndex[,ncol(fileIndex)]))
