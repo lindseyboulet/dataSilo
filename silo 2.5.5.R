@@ -408,6 +408,7 @@ server <- function(input, output, session) {
       if(!is.na(input$fileEnd)){cvPlotData <- cvPlotData[cvPlotData$Time <= input$fileEnd,]}
  
       if(!is.na(input$protoStart)){cvPlotData$Time <- cvPlotData$Time - input$protoStart}
+    cvPlotData <- cvPlotData[rowSums(is.na(cvPlotData))!=ncol(cvPlotData), ]
     
     cvPlotData
     
@@ -445,7 +446,8 @@ server <- function(input, output, session) {
       if(!is.na(input$fileEnd)){respPlotData <- respPlotData[respPlotData$Time < input$fileEnd,]}
    
       if(!is.na(input$protoStart)){respPlotData$Time <- respPlotData$Time - input$protoStart}
-   
+    respPlotData <- respPlotData[rowSums(is.na(respPlotData))!=ncol(respPlotData), ]
+    
     respPlotData
     
   })
@@ -480,7 +482,8 @@ server <- function(input, output, session) {
       if(!is.na(input$fileEnd)){burstPlotData <- burstPlotData[burstPlotData$Time < input$fileEnd,]}
    
       if(!is.na(input$protoStart)){burstPlotData$Time <- burstPlotData$Time - input$protoStart}
-     
+    burstPlotData <- burstPlotData[rowSums(is.na(burstPlotData))!=ncol(burstPlotData), ]
+    
     burstPlotData
   })
 
@@ -831,6 +834,7 @@ averageData <- reactive({
         finalData <- finalData[which(complete.cases(finalData$bins)),]
         finalData <- finalData[order(finalData$Time_mean),]
         
+        finalData <- finalData[rowSums(is.na(finalData))!=ncol(finalData), ]
         
      finalData
   
@@ -902,17 +906,10 @@ averageData <- reactive({
        for(i in 1:input$noStages){stagesFinal <- c(stagesFinal, stages[i])}
        selectedAv$stage <-rep(stagesFinal, length.out=nrow(selectedAv))
        }
-     selectedAv[which(complete.cases(selectedAv)),]
+     selectedAv <- selectedAv[rowSums(is.na(selectedAv))!=ncol(selectedAv), ]
      selectedAv[,c(1:2,ncol(selectedAv), 3:(ncol(selectedAv)-1)) ]
      })
-
-
-output$logo <- renderText({
-  c('<img src="',
-      "https://openclipart.org/download/279572/Silo.svg",
-    '">'
-    )
-})        
+  
  # Save Average Data -------------------------------------------------------   
     
 observeEvent(input$saveAverage, {
@@ -1005,8 +1002,12 @@ observeEvent(input$saveSelect, {
       timeCol2 <- timeCol2[1]
       burstColRange <- c(timeCol2, burstColRange)
       burstData <- burstData[, burstColRange]
+      burstData <- burstData[rowSums(is.na(burstData))!=ncol(burstData), ]
       write.csv(burstData, paste(fileName, "_clean_burst.csv", sep = ""), row.names = FALSE)
       }
+      cvData <- cvData[rowSums(is.na(cvData))!=ncol(cvData), ]
+      respData <- respData[rowSums(is.na(respData))!=ncol(respData), ]
+      
       write.csv(cvData, paste(fileName, "_clean_beat.csv", sep = ""), row.names = FALSE)
       write.csv(respData, paste(fileName, "_clean_breath.csv", sep = ""), row.names = FALSE)
       

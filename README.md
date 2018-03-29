@@ -39,6 +39,13 @@ Required ibraries download automatically
 6. Step 4 & 5 should be done twice per LabChart file, once for resp file, once for CV file
       
 #### MSNA Files (Optional)
+
+1. Analyze the **MSNA integrated** channel using the **peak analysis** module in Labchart.
+  - Set cutoff according to baseline noise
+  - Optimize peak detection settings.
+  - Setup table in peak analysis settings to include time and date, along with variables of interest. Time and date should be in the furthest right column       of your table.
+  - When happy with peak detection, export in .csv format from the peak analysis table view.
+2. Open in Excel and review each burst. Delete those that are not MSNA bursts.
           
 ### File Naming Conventions
 
