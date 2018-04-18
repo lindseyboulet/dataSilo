@@ -1094,21 +1094,23 @@ observeEvent(input$createMeanFigs,{
   '%!in%' <- function(x,y){!('%in%'(x,y))}
   
   for(i in fileNames){
-    df <- read.csv(i)
-    figList <- list()
-    df <- df[, which(colnames(df)%!in%c("nBeats", "nBreaths", "nBursts", "bins"))]
-    z <- 1
-    for(j in seq(2, ncol(df), 2)){
-     figList[[z]] <-  ggplot(df, aes_string(x = "Time_mean", y=colnames(df)[j])) +
-      geom_point(size = 0.65) + theme(axis.title.x = element_blank()) +
-      geom_errorbar(aes_string(ymin = paste(colnames(df)[j], "-", colnames(df)[j+1]),
-                               ymax = paste(colnames(df)[j], "+", colnames(df)[j+1])),
-                    size = 0.5)
-     z<- z+1
-    }
+    if (!file.exists(paste(substr(i,1, nchar(i)-4), ".pdf", sep = ""))){
+      df <- read.csv(i)
+      figList <- list()
+      df <- df[, which(colnames(df)%!in%c("nBeats", "nBreaths", "nBursts", "bins"))]
+      z <- 1
+      for(j in seq(2, ncol(df), 2)){
+       figList[[z]] <-  ggplot(df, aes_string(x = "Time_mean", y=colnames(df)[j])) +
+        geom_point(size = 0.65) + theme(axis.title.x = element_blank()) +
+        geom_errorbar(aes_string(ymin = paste(colnames(df)[j], "-", colnames(df)[j+1]),
+                                 ymax = paste(colnames(df)[j], "+", colnames(df)[j+1])),
+                      size = 0.5)
+       z<- z+1
+      }
     glist <- lapply(figList, ggplotGrob)
     ggsave(paste(substr(i,1, nchar(i)-4), ".pdf", sep = ""), marrangeGrob(grobs = glist, nrow=3, ncol=1))
-  }
+    }
+    }
 })
 
 }
