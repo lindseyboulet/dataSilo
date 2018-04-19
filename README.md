@@ -50,18 +50,18 @@ Required ibraries download automatically
 ### File Naming Conventions
 
   File name format: **typeOfData_subjectID_cond1_cond2.txt** <br>
-  typeOfData: breath (Respiratory File), beat (CV File) or burst (MSNA File) <br>
-  SubjectID: Unique subject identifier <br>
-  Cond(s): Unique conditons (up to 3) <br>
+  typeOfData: 'breath' (Respiratory File), 'beat' (CV File) or 'burst' (MSNA File) <br>
+  SubjectID: Unique subject identifier eg.'07' <br>
+  Cond(s): Unique conditons (up to 3) eg. 'hx'; 'pre' <br>
       eg. breath_07_hx_pre.txt <br>
   NB. Naming must be consitent
 
 ### Deployment
-1. Download Zip file from Git
+1. Download Zip file from Git (green button, top right)
 2. Extract to folder of choice
-3. load beat, breath and burst data files into silo\rawData folder 
-3. Open Silo.Rproj
-4. From the file explorer in RStudion, open Silo x.y.z.R 
+3. load beat, breath and burst data files into **silo\rawData** folder (user must create 'rawData' folder in the silo\ directory) 
+3. Open **Silo.Rproj**
+4. From the file explorer in RStudio, open **Silo x.y.z.R** 
 5. Click run app in the script editor (source) pane
   - be sure to run app externally (from drop down menu next to "run")
 
