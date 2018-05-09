@@ -1044,7 +1044,7 @@ observeEvent(input$saveSelect, {
                 input$subjectId,"_", input$cond1, sep = "")
         }else if(noCond2()== 2){
           fileName <-paste(here::here("output", "cleanData"), "/",
-                input$subjectId,"_", input$cond1, sep = "")
+                input$subjectId,"_", input$cond1, "_", input$cond2, sep = "")
         }else{
           fileName <- paste(here::here("output", "cleanData"),"/",
                 input$subjectId,"_", input$cond1,"_",
