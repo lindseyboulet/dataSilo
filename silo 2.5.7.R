@@ -113,10 +113,8 @@ ui <- dashboardPage(skin = "black",
                    br(),
                    fluidRow(
                      column(3,
-                   selectInput(inputId = "depVarBeat",
-                               label = strong("Select Cardiovascular Variable"),
-                               choices = colnames(cvDataSample),
-                               selectize = TRUE)),
+                         uiOutput("cvVarSelect")),
+                
                    column(2,
                           textInput(inputId = "xmin", label = strong("X-min"),
                                     value = NULL)),
@@ -151,10 +149,8 @@ ui <- dashboardPage(skin = "black",
              br(),
                    fluidRow(
                      column(3,
-                            selectInput(inputId = "depVarBreath",
-                                        label = strong("Select Respiratory Variable"),
-                                        choices = colnames(cvDataSample),
-                                        selectize = TRUE)),
+                            uiOutput("respVarSelect")),
+                            
                      column(2,
                             textInput(inputId = "xminb", label = strong("X-min"),
                                       value = NULL)),
@@ -374,6 +370,71 @@ server <- function(input, output, session) {
                                       ncol = sapply(gregexpr("_", fileID[1]), length) +1, byrow = TRUE))
     ncol(fileIndex)-2
   })
+  
+  output$cvVarSelect = renderUI({
+    if(noCond2()== 1){
+      beatFileName <- paste(here::here("rawData"),
+                            "/beat_", input$subjectId,"_", input$cond1, ".txt", sep = "")
+    }else if(noCond2()== 2){
+      beatFileName <- paste(here::here( "rawData"),
+                            "/beat_", input$subjectId,"_", input$cond1,
+                            "_", input$cond2,".txt", sep = "")
+    }else{
+      beatFileName <- paste(here::here( "rawData"),
+                            "/beat_", input$subjectId,"_", input$cond1,"_",
+                            input$cond2,"_", input$cond3,".txt", sep = "")
+    }
+    if(!file.exists(beatFileName)){
+      beatFileName <- paste(substr(beatFileName, 1, nchar(beatFileName)-4), ".csv", sep = "")
+      cvFile <- read.csv(beatFileName)
+      cvRawTimeCol <- which(!is.na(match(colnames(cvFile), "Time")))
+      cvPlotData <- cvFile
+      
+    } else {
+      cvFile <- read.delim(beatFileName)
+      row1 <- data.frame(lapply(cvFile[1,], as.character), stringsAsFactors=FALSE)
+      cvRawTimeCol <- which(!is.na(match(row1, "Time")))
+      cvPlotData <- cvFile[-(1:2),]
+    }
+    
+    selectInput(inputId = "depVarBeat",
+                label = strong("Select Cardiovascular Variable"),
+                choices = colnames(cvPlotData),
+                selectize = TRUE)
+  })
+  
+  output$respVarSelect = renderUI({
+    if(noCond2()== 1){
+      beatFileName <- paste(here::here("rawData"),
+                            "/breath_", input$subjectId,"_", input$cond1, ".txt", sep = "")
+    }else if(noCond2()== 2){
+      beatFileName <- paste(here::here( "rawData"),
+                            "/breath_", input$subjectId,"_", input$cond1,
+                            "_", input$cond2,".txt", sep = "")
+    }else{
+      beatFileName <- paste(here::here( "rawData"),
+                            "/breath_", input$subjectId,"_", input$cond1,"_",
+                            input$cond2,"_", input$cond3,".txt", sep = "")
+    }
+    if(!file.exists(beatFileName)){
+      beatFileName <- paste(substr(beatFileName, 1, nchar(beatFileName)-4), ".csv", sep = "")
+      cvFile <- read.csv(beatFileName)
+      cvRawTimeCol <- which(!is.na(match(colnames(cvFile), "Time")))
+      cvPlotData <- cvFile
+      
+    } else {
+      cvFile <- read.delim(beatFileName)
+      row1 <- data.frame(lapply(cvFile[1,], as.character), stringsAsFactors=FALSE)
+      cvRawTimeCol <- which(!is.na(match(row1, "Time")))
+      cvPlotData <- cvFile[-(1:2),]
+    }
+    
+    selectInput(inputId = "depVarBreath",
+                label = strong("Select Respiratory Variable"),
+                choices = colnames(cvPlotData),
+                selectize = TRUE)
+  })
+  
   cvPlotData <- reactive({
 
 
@@ -390,11 +451,19 @@ server <- function(input, output, session) {
                             "/beat_", input$subjectId,"_", input$cond1,"_",
                             input$cond2,"_", input$cond3,".txt", sep = "")
     }
-   
-   cvFile <- read.delim(beatFileName)
-    row1 <- data.frame(lapply(cvFile[1,], as.character), stringsAsFactors=FALSE)
-    cvRawTimeCol <- which(!is.na(match(row1, "Time")))
-    cvPlotData <- cvFile[-(1:2),]
+   if(!file.exists(beatFileName)){
+     beatFileName <- paste(substr(beatFileName, 1, nchar(beatFileName)-4), ".csv", sep = "")
+     cvFile <- read.csv(beatFileName)
+     cvRawTimeCol <- which(!is.na(match(colnames(cvFile), "Time")))
+     cvPlotData <- cvFile
+     
+   } else {
+     cvFile <- read.delim(beatFileName)
+      row1 <- data.frame(lapply(cvFile[1,], as.character), stringsAsFactors=FALSE)
+      cvRawTimeCol <- which(!is.na(match(row1, "Time")))
+      cvPlotData <- cvFile[-(1:2),]
+   }
+
     if(length(cvRawTimeCol)>1){ 
       cvPlotData <- cvPlotData[,-cvRawTimeCol[2]]
       cvRawTimeCol <- cvRawTimeCol[1]
@@ -429,10 +498,19 @@ server <- function(input, output, session) {
                             input$cond2,"_", input$cond3,".txt", sep = "")
     }
     
-    respFile <- read.delim(breathFileName)
-    row1 <- data.frame(lapply(respFile[1,], as.character), stringsAsFactors=FALSE)
-    respRawTimeCol <- which(!is.na(match(row1, "Time")))
-    respPlotData <- respFile[-(1:2),]
+    if(!file.exists(breathFileName)){
+      breathFileName <- paste(substr(breathFileName, 1, nchar(breathFileName)-4), ".csv", sep = "")
+      respFile <- read.csv(breathFileName)
+      respRawTimeCol <- which(!is.na(match(colnames(respFile), "Time")))
+      respPlotData <- respFile
+      
+    } else {
+      respFile <- read.delim(breathFileName)
+      row1 <- data.frame(lapply(respFile[1,], as.character), stringsAsFactors=FALSE)
+      respRawTimeCol <- which(!is.na(match(row1, "Time")))
+      respPlotData <- respFile[-(1:2),]
+    }
+    
     if(length(respRawTimeCol)>1){ 
       respPlotData <- respPlotData[,-respRawTimeCol[2]]
       respRawTimeCol <- respRawTimeCol[1]
@@ -1003,13 +1081,13 @@ observeEvent(input$saveSelect, {
       burstColRange <- c(timeCol2, burstColRange)
       burstData <- burstData[, burstColRange]
       burstData <- burstData[rowSums(is.na(burstData))!=ncol(burstData), ]
-      write.csv(burstData, paste(fileName, "_clean_burst.csv", sep = ""), row.names = FALSE)
+      write.csv(burstData, paste("burst_", fileName, "-clean.csv", sep = ""), row.names = FALSE)
       }
       cvData <- cvData[rowSums(is.na(cvData))!=ncol(cvData), ]
       respData <- respData[rowSums(is.na(respData))!=ncol(respData), ]
       
-      write.csv(cvData, paste(fileName, "_clean_beat.csv", sep = ""), row.names = FALSE)
-      write.csv(respData, paste(fileName, "_clean_breath.csv", sep = ""), row.names = FALSE)
+      write.csv(cvData, paste("beat_", fileName, "-clean.csv", sep = ""), row.names = FALSE)
+      write.csv(respData, paste("breath_", fileName, "-clean.csv", sep = ""), row.names = FALSE)
       
       })
 
