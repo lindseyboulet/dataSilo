@@ -799,10 +799,8 @@ averageData <- reactive({
 
         cvData <- cvData[, cvColRange]
         respData <- respData[, respColRange]
-
-  
-       
-          breaks <- seq(from = min(cvData$Time, na.rm = TRUE),
+        
+        breaks <- seq(from = min(cvData$Time, na.rm = TRUE),
                       to = max(cvData$Time + input$bin, na.rm = TRUE), by = input$bin)
         
         
@@ -874,7 +872,6 @@ averageData <- reactive({
                              suffixes = c("", ""), all = TRUE)
         }
         
-        
     
         zeroRoundmean <- paste(input$zeroRound, "_mean", sep = "")
         zeroRoundsem <-  paste(input$zeroRound, "_sem", sep = "")
@@ -904,11 +901,17 @@ averageData <- reactive({
         
         if(!dir.exists(here::here("output"))){
           dir.create(here::here("output"))
-          dir.create(here::here("output", "averageData"))
-          dir.create(here::here("output", "selectData"))
-          dir.create(here::here("output", "cleanData"))
-
         }
+        if(!dir.exists(here::here("output", "averageData"))){
+          dir.create(here::here("output", "averageData"))
+        }
+        if(!dir.exists(here::here("output", "selectData"))){
+          dir.create(here::here("output", "selectData"))
+        }
+        if(!dir.exists(here::here("output", "cleanData"))){
+          dir.create(here::here("output", "cleanData"))
+        }
+        
         finalData <- finalData[which(complete.cases(finalData$bins)),]
         finalData <- finalData[order(finalData$Time_mean),]
         
@@ -920,7 +923,6 @@ averageData <- reactive({
 
      valsMean <- reactiveValues(
        meanKeepRows =  rep(TRUE, isolate(nrow(averageData()))))
-     
      
     observe({
       if(input$burstDataAsk){
@@ -1029,6 +1031,8 @@ observeEvent(input$saveSelect, {
                      input$subjectId,"_", input$cond1,"_",
                      input$cond2,"_", input$cond3,'_',
                      input$bin,'sec_mean_select.csv', sep = "")
+    nameFile <- paste(input$subjectId,"_", input$cond1,  "_", input$cond2, "_", input$cond3,
+                      '_', input$bin,'sec_mean_select.csv', sep = "")
   }
   if(input$appendAsk==TRUE){fileName <- paste(strtrim(fileName, nchar(fileName)-4),"_", input$appendTag, ".csv", sep = "" )}
   write.csv(selectData(), fileName, row.names = FALSE)
@@ -1042,13 +1046,19 @@ observeEvent(input$saveSelect, {
         if(noCond2()== 1){
           fileName <-paste(here::here("output", "cleanData"),"/",
                 input$subjectId,"_", input$cond1, sep = "")
+          nameFile <- paste(input$subjectId,"_",
+                            input$cond1, sep = "")
         }else if(noCond2()== 2){
           fileName <-paste(here::here("output", "cleanData"), "/",
                 input$subjectId,"_", input$cond1, "_", input$cond2, sep = "")
+          nameFile <- paste(input$subjectId,"_", input$cond1,
+                            "_", input$cond2, sep = "")
         }else{
           fileName <- paste(here::here("output", "cleanData"),"/",
                 input$subjectId,"_", input$cond1,"_",
                 input$cond2,"_", input$cond3, sep = "")
+          nameFile <- paste(input$subjectId,"_", input$cond1,  "_",
+                            input$cond2, "_", input$cond3, sep = "")
         }
       
       cvData <- cvPlotData()
@@ -1086,8 +1096,9 @@ observeEvent(input$saveSelect, {
       cvData <- cvData[rowSums(is.na(cvData))!=ncol(cvData), ]
       respData <- respData[rowSums(is.na(respData))!=ncol(respData), ]
       
-      write.csv(cvData, paste("beat_", fileName, "-clean.csv", sep = ""), row.names = FALSE)
-      write.csv(respData, paste("breath_", fileName, "-clean.csv", sep = ""), row.names = FALSE)
+      write.csv(cvData, paste(here::here("output", "cleanData"),"/","beat_", nameFile, "-clean.csv", sep = ""), row.names = FALSE)
+      write.csv(respData, paste(here::here("output", "cleanData"),"/","breath_", nameFile, "-clean.csv", sep = ""), row.names = FALSE)
+      
       
       })
 

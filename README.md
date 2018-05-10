@@ -53,7 +53,7 @@ Required ibraries download automatically
   typeOfData: 'breath' (Respiratory File), 'beat' (CV File) or 'burst' (MSNA File) <br>
   SubjectID: Unique subject identifier eg.'07' <br>
   Cond(s): Unique conditons (up to 3) eg. 'hx'; 'pre' <br>
-      eg. breath_07_hx_pre.txt <br>
+      eg. 'breath_07_hx_pre.txt' <br>
   NB. Naming must be consitent
 
 ### Deployment
