@@ -338,11 +338,6 @@ ui <- dashboardPage(skin = "black",
               
               
 
-
-
-
-
-
 # Define server function
 server <- function(input, output, session) {
   session$onSessionEnded(stopApp)
@@ -1060,6 +1055,7 @@ observeEvent(input$saveSelect, {
           nameFile <- paste(input$subjectId,"_", input$cond1,  "_",
                             input$cond2, "_", input$cond3, sep = "")
         }
+      if(input$appendAsk==TRUE){nameFile <- paste(nameFile,"_", input$appendTag, sep = "" )}
       
       cvData <- cvPlotData()
       cvData    <- cvData[ valsCV$cvKeepRows, , drop = FALSE]
@@ -1095,6 +1091,7 @@ observeEvent(input$saveSelect, {
       }
       cvData <- cvData[rowSums(is.na(cvData))!=ncol(cvData), ]
       respData <- respData[rowSums(is.na(respData))!=ncol(respData), ]
+      if(input$appendAsk==TRUE){fileName <- paste(strtrim(fileName, nchar(fileName)-4),"_", input$appendTag, ".csv", sep = "" )}
       
       write.csv(cvData, paste(here::here("output", "cleanData"),"/","beat_", nameFile, "-clean.csv", sep = ""), row.names = FALSE)
       write.csv(respData, paste(here::here("output", "cleanData"),"/","breath_", nameFile, "-clean.csv", sep = ""), row.names = FALSE)
