@@ -48,18 +48,23 @@ subId <- unique(fileIndex[,2])
 cond1 <- unique(fileIndex[,3])
 if(ncol(fileIndex) >= 4){ cond2 <- unique(fileIndex[,4])}
 if(ncol(fileIndex) == 5){ cond3 <- unique(fileIndex[,5])}
+beatSampleFileName <- list.files(path = dataFilePath, full.names = TRUE, pattern = "beat")[1]
+breathSampleFileName <- list.files(path = dataFilePath, full.names = TRUE, pattern = "breath")[1]
 
-cvDataSample <- read.delim(list.files(
-  path = dataFilePath, full.names = TRUE)[1])
-respDataSample <- read.delim(list.files(
-  path = dataFilePath, full.names = TRUE)[1])
-if(length(type == 3)) {
-    burstDataSample <- read.csv(list.files(
-      dataFilePath, full.names = TRUE)[length(list.files(
-        dataFilePath, full.names = TRUE))])
-    burstDataSample <- burstDataSample[,-1]
-    colnames(burstDataSample)[which(!is.na(match(colnames(burstDataSample), "TimeDate")))] <- "Time"
+if(substr(beatSampleFileName,nchar(beatSampleFileName)-2, nchar(beatSampleFileName)) == "txt"){
+  cvDataSample <- read.delim(beatSampleFileName)
+  respDataSample <- read.delim(path = breathSampleFileName)
+  if(length(type == 3)) {
+    burstSampleFileName <- list.files(path = dataFilePath, full.names = TRUE, pattern = "burst")[1]
+      burstDataSample <- read.csv(burstSampleFileName)
+      burstDataSample <- burstDataSample[,-1]
+      colnames(burstDataSample)[which(!is.na(match(colnames(burstDataSample), "TimeDate")))] <- "Time"
+  }
+} else{
+  cvDataSample <- read.csv(beatSampleFileName)
+  respDataSample <- read.csv(path = breathSampleFileName)
 }
+
 
 header <- dashboardHeader()
 anchor <- tags$a(tags$img(src="logo2.png", width = 50, height = 50, align = 'left'),
@@ -783,6 +788,7 @@ averageData <- reactive({
       if (!is.null(input$respVars)){
         respColRange <- which(!is.na(match(colnames(respData), input$respVars)))
       } else {respColRange <- 8:15}
+      timeColResp <- which(colnames(respData) == "Time")
 
 
         # Run averaging function
@@ -790,7 +796,7 @@ averageData <- reactive({
         respData[respData == "#NUM!"] <- NA
 
         cvColRange <- c(timeCol, cvColRange)
-        respColRange <- c(timeCol, respColRange)
+        respColRange <- c(timeColResp, respColRange)
 
         cvData <- cvData[, cvColRange]
         respData <- respData[, respColRange]
