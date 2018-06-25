@@ -54,16 +54,16 @@ breathSampleFileName <- list.files(path = dataFilePath, full.names = TRUE, patte
 if(substr(beatSampleFileName,nchar(beatSampleFileName)-2, nchar(beatSampleFileName)) == "txt"){
   cvDataSample <- read.delim(beatSampleFileName)
   respDataSample <- read.delim(path = breathSampleFileName)
-  if(length(type == 3)) {
-    burstSampleFileName <- list.files(path = dataFilePath, full.names = TRUE, pattern = "burst")[1]
-      burstDataSample <- read.csv(burstSampleFileName)
-      burstDataSample <- burstDataSample[,-1]
-      colnames(burstDataSample)[which(!is.na(match(colnames(burstDataSample), "TimeDate")))] <- "Time"
-  }
 } else{
   cvDataSample <- read.csv(beatSampleFileName)
-  respDataSample <- read.csv(path = breathSampleFileName)
+  respDataSample <- read.csv(breathSampleFileName)
 }
+if(length(type)== 3) {
+  burstSampleFileName <- list.files(path = dataFilePath, full.names = TRUE, pattern = "burst")[1]
+  burstDataSample <- read.csv(burstSampleFileName)
+  burstDataSample <- burstDataSample[,-1]
+  colnames(burstDataSample)[which(!is.na(match(colnames(burstDataSample), "TimeDate")))] <- "Time"
+} else {burstDataSample <- NA}
 
 
 header <- dashboardHeader()
