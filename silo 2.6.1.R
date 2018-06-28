@@ -368,13 +368,13 @@ respData <- reactive({
   fileNames <- fileNames()
    respData <- txt_to_csv(fileNames[grep("breath", fileNames)])
    respRawTimeCol <- grep("Time", colnames(respData))
-   if(length(cvRawTimeCol)>1){ 
-     respData <- respData[,-cvRawTimeCol[2]]
-     cvRawTimeCol <- cvRawTimeCol[1]
+   if(length(respRawTimeCol)>1){ 
+     respData <- respData[,-respRawTimeCol[2]]
+     respRawTimeCol <- respRawTimeCol[1]
    }
    respData <- data.frame(lapply(respData, as.character), stringsAsFactors=FALSE)
    suppressWarnings(respData <- data.frame(lapply(respData, as.numeric), stringsAsFactors=FALSE))
-   colnames(respData)[cvRawTimeCol] <- "Time"
+   colnames(respData)[respRawTimeCol] <- "Time"
    if(!is.na(input$fileStart)){respData <- respData[respData$Time >= input$fileStart,]}
    if(!is.na(input$fileEnd)){respData <- respData[respData$Time <= input$fileEnd,]}
    if(!is.na(input$protoStart)){respData$Time <- respData$Time - input$protoStart}
@@ -812,8 +812,8 @@ observeEvent(input$saveSelect, {
 })
 
 # Save Clean Data --------------------------------------------------------
-observeEvent(input$saveClean,{     #### called from UI
-  if(input$appendAsk==TRUE){fileName <- paste(outFile(),"_", input$appendTag, sep = "" )}
+observeEvent(input$saveClean,{ #### called from UI
+  fileName <- outFile()
   fileName <- paste(fileName, "-clean.csv", sep = "")
   cvData <- cvData()
   cvData    <- cvData[ rxVals$cvKeepRows, , drop = FALSE]
@@ -831,7 +831,10 @@ observeEvent(input$saveClean,{     #### called from UI
   timeCol <- which(colnames(respData) == "Time")
   respColRange <- c(timeCol, respColRange)
   respData <- respData[,respColRange]
-  if(input$appendAsk){fileName <- paste(fileName,"_", input$appendTag, sep = "" )}
+  if(input$appendAsk==TRUE){
+    fileName <- paste(strtrim(fileName, nchar(fileName)-4),"_", 
+                      input$appendTag, ".csv", sep = "" )
+    }  
   if(!is.null(burstData())){
     burstData <- burstData()
     burstData    <- burstData[rxVals$burstKeepRows, , drop = FALSE]
