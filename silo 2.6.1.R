@@ -603,11 +603,11 @@ averageData <- reactive({
   respData    <- respData[rxVals$respKeepRows, , drop = FALSE]
   if (!is.null(input$cvVars)){
     cvColRange <- which(!is.na(match(colnames(cvData), input$cvVars)))
-  } else {cvColRange <- 2:6}
+  } else {cvColRange <- 2:3}
   cvTimeCol <- which(colnames(cvData) == "Time")
   if (!is.null(input$respVars)){
     respColRange <- which(!is.na(match(colnames(respData), input$respVars)))
-  } else {respColRange <- 8:15}
+  } else {respColRange <- (ncol(respData)-1):ncol(respData)}
   respTimeCol <- which(colnames(respData) == "Time")
   
   if(!is.null(burstData())){
