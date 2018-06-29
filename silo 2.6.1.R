@@ -343,7 +343,10 @@ fileNames <- reactive({
     useFileID[i] <- gsub("_([^_]*)$", ".\\1", useFileID[i])
   }
   fileNames <- paste(here::here("rawData"), useFileID, sep = "/")
-  fileNames
+  validate(
+    need(file.exists(fileNames[1]), paste("File doesn't exist!"))
+    )
+    fileNames
 })
 
 # load cv, resp and burst data -----------------------------------------
@@ -603,11 +606,11 @@ averageData <- reactive({
   respData    <- respData[rxVals$respKeepRows, , drop = FALSE]
   if (!is.null(input$cvVars)){
     cvColRange <- which(!is.na(match(colnames(cvData), input$cvVars)))
-  } else {cvColRange <- 2:3}
+  } else {cvColRange <- 2:6}
   cvTimeCol <- which(colnames(cvData) == "Time")
   if (!is.null(input$respVars)){
     respColRange <- which(!is.na(match(colnames(respData), input$respVars)))
-  } else {respColRange <- (ncol(respData)-1):ncol(respData)}
+  } else {respColRange <- 8:9}
   respTimeCol <- which(colnames(respData) == "Time")
   
   if(!is.null(burstData())){
