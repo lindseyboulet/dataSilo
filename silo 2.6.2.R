@@ -32,7 +32,8 @@ ui <- dashboardPage(skin = "black",
                                     checkboxInput("appendAsk", label = "Append Id tag to Output File", value = FALSE),
                                     conditionalPanel(condition = "input.appendAsk",
                                                      textInput("appendTag", label = "Append Tag", value = NULL)
-                                    )
+                                    ),
+                                    actionButton("updateFileList", "Update File List")
       ),      
              dashboardBody(
               tabsetPanel(
@@ -266,15 +267,18 @@ server <- function(input, output, session) {
   
 # Function to load data based on filename
   txt_to_csv <- function(fileName){
-    if(substr(fileName, nchar(fileName)-2, nchar(fileName)) == "csv"){
-      df <- read.csv(fileName)
-    } else {
-      df <- read.delim(fileName)
-      row1 <- data.frame(lapply(df[1,], as.character), stringsAsFactors=FALSE)
-      colnames(df)[which(!is.na(match(row1, "Time")))] <- "Time"
-      df <- df[-(1:2),]
-    }
-    df
+    if(file.exists(fileName)){
+      if(substr(fileName, nchar(fileName)-2, nchar(fileName)) == "csv"){
+        df <- read.csv(fileName)
+      } else {
+        df <- read.delim(fileName)
+        row1 <- data.frame(lapply(df[1,], as.character), stringsAsFactors=FALSE)
+        colnames(df)[which(!is.na(match(row1, "Time")))] <- "Time"
+        df <- df[-(1:2),]
+      }
+      return(df)
+    } else {return(NULL)}
+
   }
   
   # determine number of conditions  -----------------------------------------------------
@@ -291,7 +295,10 @@ server <- function(input, output, session) {
   outputOptions(output, "noCond", suspendWhenHidden = FALSE) ## so the app can rectively guess the conditions
   
   # create file index -------------------------------------------------------
+  folderCheck <- reactiveTimer(500)
+  
   fileIndex <- reactive({
+    input$updateFileList
     fileID <- list.files(path =  here::here("rawData"))
     fileType <- substr(fileID, nchar(fileID)-2, nchar(fileID))
     fileID <- strtrim(fileID, nchar(fileID)-4)
@@ -344,7 +351,8 @@ fileNames <- reactive({
   }
   fileNames <- paste(here::here("rawData"), useFileID, sep = "/")
   validate(
-    need(file.exists(fileNames[1]), paste("File doesn't exist!"))
+    need(file.exists(fileNames[1]), paste("File doesn't exist!")),
+    need(file.exists(fileNames[2]), paste("File doesn't exist!"))
     )
     fileNames
 })
@@ -572,15 +580,15 @@ observe({
 # Tab 2 selections --------------------------------------------------------
 # variables for each data type
 output$cvVars <- renderUI({
-  selectInput(inputId = "cvVars", label = strong("Select Cardiovascular Variables"),choices = colnames(cvData()),
+  selectInput(inputId = "cvVars", label = strong("Select Cardiovascular Variables"),choices = colnames(isolate(cvData())),
               multiple=TRUE, selectize=TRUE)
 })
 output$respVars <- renderUI({
-  selectInput(inputId = "respVars", label = strong("Select Respiratory Variables"),choices = colnames(respData()),
+  selectInput(inputId = "respVars", label = strong("Select Respiratory Variables"),choices = colnames(isolate(respData())),
               multiple=TRUE, selectize=TRUE)
 })
 output$burstVars <- renderUI({
-  selectInput(inputId = "burstVars", label = strong("Select Burst Variables"),choices = colnames(burstData()),
+  selectInput(inputId = "burstVars", label = strong("Select Burst Variables"),choices = colnames(isolate(burstData())),
               multiple=TRUE, selectize=TRUE)
 })
 
@@ -876,48 +884,36 @@ observeEvent(input$createRawFigs,{
     if(vec[i] != maxCols){j <- c(j, rep("", (maxCols-i)))}
     fileIndex[i,] <-j
   })
-  len <- length(unique(fileIndex[,ncol(fileIndex)]))
-  if(length(which(fileIndex[,ncol(fileIndex)]==""))!= 0){len <- len-1}
-  iterator <- rep(seq(1,(nrow(fileIndex)/len)), each = len)
-  ll <- 1
-  for(i in seq(1,(nrow(fileIndex)/len))){
-    dList <- list()
+
+  targetFiles <- subset(fileIndex, V1 == "beat")
+  fileNameList <- character(0)
+  for(i in 1:nrow(targetFiles)){
+    fileNameList[i] <-  paste(fileIndex[i,2:ncol(fileIndex)], collapse = "_")
+  }
+  nType <- length(unique(fileIndex[,1]))
+  printList <- list(beat = NULL, breath = NULL)
+  for(i in fileNameList){
+    beatFile <- paste(here::here("output", "cleanData"),"/","beat_", i, ".csv", sep = "")
+    breathFile <- paste(here::here("output", "cleanData"),"/","breath_", i, ".csv", sep = "")
+    printList$beat <- read.csv(beatFile)
+    printList$breath <- read.csv(breathFile)
+    if(nType == 3){
+      beatFile <- paste(here::here("output", "cleanData"),"/","burst_", i, ".csv", sep = "")
+    }
+    outFileName <- paste(here::here("output", "cleanData"),"/", i, "-clean.pdf", sep = "")
     figList <- list()
-    fileName1 <- paste(fileIndex[ll,], collapse = "_")
-    while(substr(fileName1, nchar(fileName1),nchar(fileName1)) == "_"){
-      fileName1 <- substr(fileName1, 1, nchar(fileName1)-1)
-    }
-    fileName2 <- paste(fileIndex[ll+1,], collapse = "_")
-    while(substr(fileName2, nchar(fileName2),nchar(fileName2)) == "_"){
-      fileName2 <- substr(fileName2, 1, nchar(fileName2)-1)
-    }
-    fileName1 <- paste(here::here("output", "cleanData"),"/",fileName1, ".csv", sep = "")
-    fileName2 <- paste(here::here("output", "cleanData"),"/",fileName2, ".csv", sep = "")
-    dList[[1]] <- read.csv(fileName1)
-    dList[[2]] <- read.csv(fileName2)
-    if(len == 3){
-      fileName3 <- paste(fileIndex[ll+2,], collapse = "_")
-      while(substr(fileName3, nchar(fileName3),nchar(fileName3)) == "_"){
-        fileName3 <- substr(fileName3, 1, nchar(fileName3)-1)
-      }
-      fileName3 <- paste(here::here("output", "cleanData"),"/",fileName3, ".csv", sep = "")
-      dList[[3]] <- read.csv(fileName3)
-    }
-    fileName <- paste(fileIndex[ll,-((maxCols-1):maxCols)], collapse = "_")
-    while(substr(fileName, nchar(fileName),nchar(fileName)) == "_"){
-      fileName <- substr(fileName, 1, nchar(fileName)-1)
-    }
-    fileName <- paste(here::here("output", "cleanData"),"/",fileName, "_clean.pdf", sep = "")
-    for(k in 1:len){
-      for(j in 1:(ncol(dList[[k]])-1)){
-        figList[[length(figList)+1]] <-ggplot(dList[[k]], aes_string(x="Time", y = colnames(dList[[k]])[j+1]))+
+    for(k in printList){
+      for(j in 1:(ncol(k)-1)){
+        figList[[j]] <-ggplot(k, aes_string(x="Time", y = colnames(k)[j+1]))+
           geom_point(size = 0.65) + theme(axis.title.x = element_blank())
       }
     }    
     glist <- lapply(figList, ggplotGrob)
-    ggsave(fileName, marrangeGrob(grobs = glist, nrow=3, ncol=1))
-    ll <- ll+len
-  }
+    ggsave(outFileName, marrangeGrob(grobs = glist, nrow=3, ncol=1))
+  } 
+  
+
+   
 })
 
 # Save Mean Figures -----------------------------------------------------
