@@ -278,7 +278,6 @@ server <- function(input, output, session) {
       }
       return(df)
     } else {return(NULL)}
-
   }
   
   # determine number of conditions  -----------------------------------------------------
@@ -295,8 +294,7 @@ server <- function(input, output, session) {
   outputOptions(output, "noCond", suspendWhenHidden = FALSE) ## so the app can rectively guess the conditions
   
   # create file index -------------------------------------------------------
-  folderCheck <- reactiveTimer(500)
-  
+
   fileIndex <- reactive({
     input$updateFileList
     fileID <- list.files(path =  here::here("rawData"))
@@ -433,25 +431,46 @@ rxVals <- reactiveValues(
   cvKeepRows = NULL, respKeepRows = NULL, burstKeepRows = NULL)
 
 observeEvent(input$subjectId, {
-  rxVals$cvKeepRows <-  rep(TRUE, isolate(nrow(cvData())))
-  rxVals$respKeepRows <-  rep(TRUE, isolate(nrow(respData())))
+  rxVals$cvKeepRows <-  data.frame(matrix(1,nrow = isolate(nrow(cvData())),
+                                          ncol = isolate(ncol(cvData())), byrow = FALSE))
+  colnames(rxVals$cvKeepRows) <- colnames(cvData())
+  rxVals$respKeepRows <-  data.frame(matrix(1,nrow = isolate(nrow(respData())),
+                                          ncol = isolate(ncol(respData())), byrow = FALSE))
+  colnames(rxVals$respKeepRows) <- colnames(respData())
   if(!is.null(burstData())){
-    rxVals$burstKeepRows <- rep(TRUE, isolate(nrow(burstData())))
-  }
+    rxVals$burstKeepRows <-  data.frame(matrix(1,nrow = isolate(nrow(burstData())),
+                                              ncol = isolate(ncol(burstData())), byrow = FALSE))
+    colnames(rxVals$burstKeepRows) <- colnames(burstData())
+    }
+})
+
+cvCleanData <- reactive({
+  cvData <- cvData()
+  cvData[which(rxVals$cvKeepRows != 1, arr.ind = TRUE)] <- NA
+  cvData
+})
+
+respCleanData <- reactive({
+  respData <- respData()
+  respData[which(rxVals$respKeepRows != 1, arr.ind = TRUE)] <- NA
+  respData
+})
+
+burstCleanData <- reactive({
+  burst <- burstData()
+  burst[which(rxVals$burstKeepRows != 1, arr.ind = TRUE)] <- NA
+  burst
 })
 # cv raw plot
 output$cvRawplot <- renderPlot({
   req(input$cvVarSelect)
-  cvData <- cvData()
-  keepCV    <- cvData[ rxVals$cvKeepRows, , drop = FALSE]
-  excludeCV <- cvData[!rxVals$cvKeepRows, , drop = FALSE]
-  ggplot(keepCV, aes_string( 
+  cvData <- cvCleanData()
+  ggplot(cvData, aes_string( 
     x="Time",
     y=input$cvVarSelect))+
     geom_point(colour='#e41a1c')+
     theme(axis.title.x=element_blank(),
           plot.background = element_rect(fill = "grey93")) +
-    geom_point(data = excludeCV, shape = 21, fill = NA, color = "red", alpha = 0.25) +
     coord_cartesian() +
     scale_x_continuous(limits = as.numeric(c(input$xmin, input$xmax))) +
     scale_y_continuous(limits = as.numeric(c(input$ymin, input$ymax)))
@@ -465,20 +484,16 @@ height = function() {
 # resp raw plot
 output$respRawplot <- renderPlot({
   req(input$respVarSelect)
-  respData <- respData()
-  keepResp    <- respData[ rxVals$respKeepRows, , drop = FALSE]
-  excludeResp <- respData[!rxVals$respKeepRows, , drop = FALSE]
-  ggplot(keepResp, aes_string( 
+  respData <- respCleanData()
+  ggplot(respData, aes_string( 
     x="Time",
     y=input$respVarSelect))+
     geom_point(colour='#377eb8')+
     theme(axis.title.x=element_blank(),
           plot.background = element_rect(fill = "grey93")) +
-    geom_point(data = excludeResp, shape = 21, fill = NA, color = "red", alpha = 0.25) +
     coord_cartesian() +
     scale_x_continuous(limits = as.numeric(c(input$xminb, input$xmaxb))) +
     scale_y_continuous(limits = as.numeric(c(input$yminb, input$ymaxb)))
-  
 },
 height = function() {
   session$clientData$output_respRawplot_width/4
@@ -488,15 +503,13 @@ height = function() {
 output$burstRawplot <- renderPlot({
   if(!is.null(burstData())){
     req(input$depVarBurst)
-    burstData <- burstData()
-    keepburst    <- burstData[rxVals$burstKeepRows, , drop = FALSE]
-    excludeburst <- burstData[!rxVals$burstKeepRows, , drop = FALSE]
-    ggplot(keepburst, aes_string(x="Time",
+    burstData <- burstCleanData()
+
+    ggplot(burstData, aes_string(x="Time",
                                  y=input$depVarBurst))+
       geom_point(colour='#4daf4a')+
       theme(axis.title.x=element_blank(),
             plot.background = element_rect(fill = "grey93")) +
-      geom_point(data = excludeburst, shape = 21, fill = NA, color = "green", alpha = 0.25) +
       coord_cartesian() +
       scale_x_continuous(limits = as.numeric(c(input$xminc, input$xmaxc))) +
       scale_y_continuous(limits = as.numeric(c(input$yminc, input$ymaxc)))
@@ -512,12 +525,12 @@ height = function() {
 # Toggle points that are clicked on plot 1
 observeEvent(input$plot1_click, {
   res <- nearPoints(cvData(), input$plot1_click, allRows = TRUE)
-  rxVals$cvKeepRows <- xor(rxVals$cvKeepRows, res$selected_)
+  rxVals$cvKeepRows[input$cvVarSelect][which(res$selected_==TRUE),1] <- 0
 })
 # Toggle points that are brushed, when button is clicked on plot 1
 observeEvent(input$exclude_toggle, {
   res <- brushedPoints(cvData(), input$plot1_brush, allRows = TRUE)
-  rxVals$cvKeepRows<- xor(rxVals$cvKeepRows, res$selected_)
+  rxVals$cvKeepRows[input$cvVarSelect][which(res$selected_==TRUE),1] <- 0
 })
 # Hover for plot 1
 output$hover_info1 <- renderPrint({
@@ -528,18 +541,20 @@ output$hover_info1 <- renderPrint({
 })
 # Reset all points for plot 1
 observeEvent(input$exclude_reset, {
-  rxVals$cvKeepRows <- rep(TRUE, nrow(cvData()))
+  rxVals$cvKeepRows <-  data.frame(matrix(1,nrow = isolate(nrow(cvData())),
+                                          ncol = isolate(ncol(cvData())), byrow = FALSE))
+  colnames(rxVals$cvKeepRows) <- colnames(cvData())
 })
 
 # Toggle points that are clicked on plot 2
 observeEvent(input$plot2_click, {
   res <- nearPoints(respData(), input$plot2_click, allRows = TRUE)
-  rxVals$respKeepRows <- xor(rxVals$respKeepRows, res$selected_)
+  rxVals$respKeepRows[input$respVarSelect][which(res$selected_==TRUE),1] <- 0
 })
 # Toggle points that are brushed, when button is clicked on plot 2
 observeEvent(input$exclude_toggle2, {
-  res <- brushedPoints(isolate(respData()), input$plot2_brush, allRows = TRUE)
-  rxVals$respKeepRows  <- xor(rxVals$respKeepRows, res$selected_)
+  res <- brushedPoints(respData(), input$plot2_brush, allRows = TRUE)
+  rxVals$respKeepRows[input$respVarSelect][which(res$selected_==TRUE),1] <- 0
 })
 # Hover for plot 2
 output$hover_info2 <- renderPrint({
@@ -550,19 +565,21 @@ output$hover_info2 <- renderPrint({
 })
 # Reset all points for plot 2
 observeEvent(input$exclude_reset2, {
-  rxVals$respKeepRows <- rep(TRUE, nrow(isolate(respData())))
+  rxVals$respKeepRows <-  data.frame(matrix(1,nrow = isolate(nrow(respData())),
+                                          ncol = isolate(ncol(respData())), byrow = FALSE))
+  colnames(rxVals$respKeepRows) <- colnames(respData())
 })
 observe({
   if(!is.null(burstData())){
     # Toggle points that are clicked on plot 3
     observeEvent(input$plot3_click, {
       res <- nearPoints(burstData(), input$plot3_click, allRows = TRUE)
-      rxVals$burstKeepRows <- xor(rxVals$burstKeepRows, res$selected_)
+      rxVals$burstKeepRows[input$burstVarSelect][which(res$selected_==TRUE),1] <- 0
     })
     # Toggle points that are brushed, when button is clicked on plot 3
     observeEvent(input$exclude_toggle3, {
       res <- brushedPoints(isolate(burstData()), input$plot3_brush, allRows = TRUE)
-      rxVals$burstKeepRows  <- xor(rxVals$burstKeepRows, res$selected_)
+      rxVals$burstKeepRows[input$burstVarSelect][which(res$selected_==TRUE),1] <- 0
     })
     # Hover for plot 3
     output$hover_info3 <- renderPrint({
@@ -572,7 +589,9 @@ observe({
     })
     # Reset all points for plot 3
     observeEvent(input$exclude_reset3, {
-      rxVals$burstKeepRows <- rep(TRUE, nrow(isolate(burstData())))
+      rxVals$burstKeepRows <-  data.frame(matrix(1,nrow = isolate(nrow(burstData())),
+                                                ncol = isolate(ncol(burstData())), byrow = FALSE))
+      colnames(rxVals$burstKeepRows) <- colnames(burstData())
     })
   }
 })
@@ -608,10 +627,8 @@ output$twoRound <- renderUI({
 
 # Averaging and merging data ----------------------------------------------
 averageData <- reactive({
-  cvData <- cvData()
-  cvData    <- cvData[rxVals$cvKeepRows, , drop = FALSE]
-  respData <- respData()
-  respData    <- respData[rxVals$respKeepRows, , drop = FALSE]
+  cvData <- cvCleanData()
+  respData <- respCleanData()
   if (!is.null(input$cvVars)){
     cvColRange <- which(!is.na(match(colnames(cvData), input$cvVars)))
   } else {cvColRange <- 2:6}
@@ -622,8 +639,7 @@ averageData <- reactive({
   respTimeCol <- which(colnames(respData) == "Time")
   
   if(!is.null(burstData())){
-    burstData <- burstData()
-    burstData <- burstData[rxVals$burstKeepRows, , drop = FALSE]
+    burstData <- burstCleanData()
     if (!is.null(input$burstVars)){
       burstColRange <- which(!is.na(match(colnames(burstData), input$burstVars)))
     } else {burstColRange <- 2:6}  
@@ -826,16 +842,14 @@ observeEvent(input$saveSelect, {
 observeEvent(input$saveClean,{ #### called from UI
   fileName <- outFile()
   fileName <- paste(fileName, "-clean.csv", sep = "")
-  cvData <- cvData()
-  cvData    <- cvData[ rxVals$cvKeepRows, , drop = FALSE]
+  cvData <- cvCleanData()
   if (!is.null(input$cvVars)){
     cvColRange <- which(!is.na(match(colnames(cvData), input$cvVars)))
   } else {cvColRange <- 2:6}
   timeCol <- which(colnames(cvData) == "Time")
   cvColRange <- c(timeCol, cvColRange)
   cvData <- cvData[,cvColRange]
-  respData <- respData()
-  respData    <- respData[ rxVals$respKeepRows, , drop = FALSE]
+  respData <- respCleanData()
   if (!is.null(input$respVars)){
     respColRange <- which(!is.na(match(colnames(respData), input$respVars)))
   } else {respColRange <- 8:15}
@@ -847,8 +861,7 @@ observeEvent(input$saveClean,{ #### called from UI
                       input$appendTag, ".csv", sep = "" )
     }  
   if(!is.null(burstData())){
-    burstData <- burstData()
-    burstData    <- burstData[rxVals$burstKeepRows, , drop = FALSE]
+    burstData <- burstCleanData()
     if (!is.null(input$burstVars)){
       burstColRange <- which(!is.na(match(colnames(burstData), input$burstVars)))
     } else {burstColRange <- 2:6}  
