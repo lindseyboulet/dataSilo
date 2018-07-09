@@ -430,7 +430,10 @@ output$burstVarSelect <- renderUI({
 rxVals <- reactiveValues(
   cvKeepRows = NULL, respKeepRows = NULL, burstKeepRows = NULL)
 
-observeEvent(input$subjectId, {
+observeEvent(input$subjectId,
+             input$cond1,
+             input$cond2,
+             input$cond3,{
   rxVals$cvKeepRows <-  data.frame(matrix(1,nrow = isolate(nrow(cvData())),
                                           ncol = isolate(ncol(cvData())), byrow = FALSE))
   colnames(rxVals$cvKeepRows) <- colnames(cvData())
