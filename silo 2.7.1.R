@@ -433,7 +433,10 @@ rxVals <- reactiveValues(
 observeEvent(input$subjectId,
              input$cond1,
              input$cond2,
-             input$cond3,{
+             input$cond3,
+             input$fileStart,
+             input$fileEnd,
+             input$protoStart,{
   rxVals$cvKeepRows <-  data.frame(matrix(1,nrow = isolate(nrow(cvData())),
                                           ncol = isolate(ncol(cvData())), byrow = FALSE))
   colnames(rxVals$cvKeepRows) <- colnames(cvData())
