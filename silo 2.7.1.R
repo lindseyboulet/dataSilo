@@ -22,13 +22,15 @@ ui <- dashboardPage(skin = "black",
                     title="silo - Interactive Signal Averaging",
                 header,                    
                     dashboardSidebar(width = 150,
-                                     numericInput("fileStart", label = "File Start", value = NA),
-                                     numericInput("fileEnd", label = "File End", value = NA),
-                                     numericInput("protoStart", label = "Start of Protocol", value = NA),
                                      uiOutput("subjectId"),
                                      uiOutput("cond1"),
                                      uiOutput("cond2"),
                                      uiOutput("cond3"),
+                                     numericInput("fileStart", label = "File Start", value = NA),
+                                     numericInput("fileEnd", label = "File End", value = NA),
+                                     numericInput("protoStart", label = "Start of Protocol", value = NA),
+                                     br(),
+                                     actionButton("resetTimes", "Reset Time Points"),
                                     checkboxInput("appendAsk", label = "Append Id tag to Output File", value = FALSE),
                                     conditionalPanel(condition = "input.appendAsk",
                                                      textInput("appendTag", label = "Append Tag", value = NULL)
@@ -54,7 +56,9 @@ ui <- dashboardPage(skin = "black",
                                     value = NULL)),
                    column(2,
                           textInput(inputId = "ymax", label = strong("Y-max"),
-                                    value = NULL))
+                                    value = NULL)),
+                   column(1, 
+                          actionButton('resetPlot1', "Reset"))
                    ),
              h4(strong("")),
                    fluidRow(
@@ -87,7 +91,9 @@ ui <- dashboardPage(skin = "black",
                                       value = NULL)),
                      column(2,
                             textInput(inputId = "ymaxb", label = strong("Y-max"),
-                                      value = NULL))),
+                                      value = NULL)),
+                     column(1, 
+                            actionButton('resetPlot2', "Reset"))),
                      h4(strong("")),
                    fluidRow(
                      column(10,
@@ -121,7 +127,9 @@ ui <- dashboardPage(skin = "black",
                                   value = NULL)),
                  column(2,
                         textInput(inputId = "ymaxc", label = strong("Y-max"),
-                                  value = NULL))
+                                  value = NULL)),
+                 column(1, 
+                        actionButton('resetPlot3', "Reset"))
                ),
                
                h4(strong("")),
@@ -159,7 +167,7 @@ ui <- dashboardPage(skin = "black",
              ),
              tabPanel("Averaged Data",
                       fluidRow(
-                        column(2,
+                        column(1,
                                numericInput(inputId = "bin", label = strong("Bin"),
                                             value = 15)
                         ),
@@ -181,8 +189,10 @@ ui <- dashboardPage(skin = "black",
                         ),
                         column(2,
                                numericInput(inputId = "av1Ymax", label = strong("Y-Max"),
-                                            value = NULL)
-                        )
+                                            value = NULL)),
+                         column(1,
+                                actionButton(inputId = "avReset", label = strong("Reset"),
+                                             value = NULL))
                       ),
                       fluidRow(
                         column(12, 
@@ -430,13 +440,10 @@ output$burstVarSelect <- renderUI({
 rxVals <- reactiveValues(
   cvKeepRows = NULL, respKeepRows = NULL, burstKeepRows = NULL)
 
-observeEvent(input$subjectId,
-             input$cond1,
-             input$cond2,
-             input$cond3,
-             input$fileStart,
-             input$fileEnd,
-             input$protoStart,{
+observeEvent(c(input$subjectId,
+               input$cond1,
+               input$cond2,
+               input$cond3),{
   rxVals$cvKeepRows <-  data.frame(matrix(1,nrow = isolate(nrow(cvData())),
                                           ncol = isolate(ncol(cvData())), byrow = FALSE))
   colnames(rxVals$cvKeepRows) <- colnames(cvData())
@@ -600,6 +607,37 @@ observe({
       colnames(rxVals$burstKeepRows) <- colnames(burstData())
     })
   }
+})
+
+observeEvent(input$resetTimes,{
+  updateNumericInput(session, "fileStart", value = NA)
+  updateNumericInput(session, "fileEnd", value = NA)
+  updateNumericInput(session, "protoStart", value = NA)
+ })
+
+observeEvent(input$resetPlot1,{
+  updateTextInput(session, "xmin", value = NA)
+  updateTextInput(session, "xmax", value = NA)
+  updateTextInput(session, "ymin", value = NA)
+  updateTextInput(session, "ymax", value = NA)
+})
+observeEvent(input$resetPlot2,{
+  updateTextInput(session, "xminb", value = NA)
+  updateTextInput(session, "xmaxb", value = NA)
+  updateTextInput(session, "yminb", value = NA)
+  updateTextInput(session, "ymaxb", value = NA)
+})
+observeEvent(input$resetPlot3,{
+  updateTextInput(session, "xminc", value = NA)
+  updateTextInput(session, "xmaxc", value = NA)
+  updateTextInput(session, "yminc", value = NA)
+  updateTextInput(session, "ymaxc", value = NA)
+})
+observeEvent(input$avReset,{
+  updateTextInput(session, "av1Xmin", value = NA)
+  updateTextInput(session, "av1Xmax", value = NA)
+  updateTextInput(session, "av1Ymin", value = NA)
+  updateTextInput(session, "av1Ymax", value = NA)
 })
 
 # Tab 2 selections --------------------------------------------------------
