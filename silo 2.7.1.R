@@ -157,7 +157,7 @@ ui <- dashboardPage(skin = "black",
                   column(4, uiOutput("cvVars")),
                   column(4, uiOutput("respVars")),
                   conditionalPanel(condition = "input.burstAsk",
-                       column(4, uiOutput("burstVars"))
+                       column(4, uiOutput("burstVarSelect"))
                   )
                 ),
                 fluidRow(
