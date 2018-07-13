@@ -115,7 +115,7 @@ ui <- dashboardPage(skin = "black",
              conditionalPanel(condition = "output.burstAsk",
                fluidRow(
                  column(3,
-                        uiOutput("depVarBurst")),
+                        uiOutput("burstVarSelect")),
                  column(2,
                         textInput(inputId = "xminc", label = strong("X-min"),
                                   value = NULL)),
@@ -430,7 +430,7 @@ output$respVarSelect <- renderUI({
 })
 output$burstVarSelect <- renderUI({
   req(input$subjectId)
-  selectInput(inputId = "depVarBurst", label = strong("Select Burst File Variable"),choices = colnames(burstData()))
+  selectInput(inputId = "burstVarSelect", label = strong("Select Burst File Variable"),choices = colnames(burstData()))
 })
 
 
@@ -515,11 +515,11 @@ height = function() {
 # burst raw plot
 output$burstRawplot <- renderPlot({
   if(!is.null(burstData())){
-    req(input$depVarBurst)
+    req(input$burstVarSelect)
     burstData <- burstCleanData()
 
     ggplot(burstData, aes_string(x="Time",
-                                 y=input$depVarBurst))+
+                                 y=input$burstVarSelect))+
       geom_point(colour='#4daf4a')+
       theme(axis.title.x=element_blank(),
             plot.background = element_rect(fill = "grey93")) +
@@ -597,7 +597,7 @@ observe({
     # Hover for plot 3
     output$hover_info3 <- renderPrint({
       burstData <- burstData()
-      yVal <- which(colnames(burstData) == input$depVarBurst)
+      yVal <- which(colnames(burstData) == input$burstVarSelect)
       HTML(hoverValue(input$plot3_hover, burstData$Time, burstData[,yVal], burstData$Time))
     })
     # Reset all points for plot 3
