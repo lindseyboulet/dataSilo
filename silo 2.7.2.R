@@ -404,13 +404,15 @@ burstData <- reactive({
   fileNames <- fileNames()
   if(length(fileNames) ==3){
     burstData <- txt_to_csv(fileNames[grep("burst", fileNames)])
-    burstData <- burstData[-1]
-    burstRawTimeCol <- which(!is.na(match(colnames(burstData), "TimeDate")))
-    burstData <- data.frame(lapply(burstData, as.character), stringsAsFactors=FALSE)
-    burstData[, burstRawTimeCol] <-substr(burstData[, burstRawTimeCol],
-                                              11, nchar(burstData[, burstRawTimeCol]))    
-    suppressWarnings(burstData <- data.frame(lapply(burstData, as.numeric), stringsAsFactors=FALSE))
-    colnames(burstData)[burstRawTimeCol]<- "Time"
+    if(length(grep("TimeDate", colnames(burstData)))>0){
+      burstData <- burstData[-1]
+      burstRawTimeCol <- which(!is.na(match(colnames(burstData), "TimeDate")))
+      burstData <- data.frame(lapply(burstData, as.character), stringsAsFactors=FALSE)
+      burstData[, burstRawTimeCol] <-substr(burstData[, burstRawTimeCol],
+                                                11, nchar(burstData[, burstRawTimeCol]))    
+      suppressWarnings(burstData <- data.frame(lapply(burstData, as.numeric), stringsAsFactors=FALSE))
+      colnames(burstData)[burstRawTimeCol]<- "Time"
+    }
     if(!is.na(input$fileStart)){burstData <- burstData[burstData$Time > input$fileStart,]}
     if(!is.na(input$fileEnd)){burstData <- burstData[burstData$Time < input$fileEnd,]}
     if(!is.na(input$protoStart)){burstData$Time <- burstData$Time - input$protoStart}
@@ -675,18 +677,18 @@ averageData <- reactive({
   respData <- respCleanData()
   if (!is.null(input$cvVars)){
     cvColRange <- which(!is.na(match(colnames(cvData), input$cvVars)))
-  } else {cvColRange <- 2:6}
+  } else {cvColRange <- 1:ncol(cvData)}
   cvTimeCol <- which(colnames(cvData) == "Time")
   if (!is.null(input$respVars)){
     respColRange <- which(!is.na(match(colnames(respData), input$respVars)))
-  } else {respColRange <- 8:9}
+  } else {respColRange <- 1:ncol(respData)}
   respTimeCol <- which(colnames(respData) == "Time")
   
   if(!is.null(burstData())){
     burstData <- burstCleanData()
     if (!is.null(input$burstVars)){
       burstColRange <- which(!is.na(match(colnames(burstData), input$burstVars)))
-    } else {burstColRange <- 2:6}  
+    } else {burstColRange <- 1:ncol(burstData)}  
     burstTimeCol <- which(colnames(burstData) == "Time")
     burstTimeCol <- burstTimeCol[1]
   }
