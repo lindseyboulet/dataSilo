@@ -292,7 +292,7 @@ server <- function(input, output, session) {
   
   # determine number of conditions  -----------------------------------------------------
   noCond <- reactive({
-    dataFilePath <- here::here("rawData") #### NEED TO CHANGE THIS TO FOLDER WITH RAW DATA ####
+    dataFilePath <- here::here("rawData") 
     fileID <- list.files(path = dataFilePath)
     fileID <- strtrim(fileID, nchar(fileID)-4)
     fileIndex <- as.data.frame(matrix(as.character(unlist(strsplit(fileID, "_"))), 
@@ -379,7 +379,10 @@ cvData <- reactive({
   colnames(cvData)[cvRawTimeCol] <- "Time"
   if(!is.na(input$fileStart)){cvData <- cvData[cvData$Time >= input$fileStart,]}
   if(!is.na(input$fileEnd)){cvData <- cvData[cvData$Time <= input$fileEnd,]}
-  if(!is.na(input$protoStart)){cvData$Time <- cvData$Time - input$protoStart}
+  if(!is.na(input$protoStart)){
+    cvData$RelTime <- cvData$Time - input$protoStart
+    cvData$RelTime <-  cvData$RelTime - cvData$RelTime[which.min(abs(cvData$RelTime  - 0))]
+    }
   cvData <- cvData[rowSums(is.na(cvData))!=ncol(cvData), ]
   cvData
 })
@@ -396,7 +399,10 @@ respData <- reactive({
    colnames(respData)[respRawTimeCol] <- "Time"
    if(!is.na(input$fileStart)){respData <- respData[respData$Time >= input$fileStart,]}
    if(!is.na(input$fileEnd)){respData <- respData[respData$Time <= input$fileEnd,]}
-   if(!is.na(input$protoStart)){respData$Time <- respData$Time - input$protoStart}
+   if(!is.na(input$protoStart)){
+     respData$RelTime <- respData$Time - input$protoStart
+     respData$RelTime <-  respData$RelTime - respData$RelTime[which.min(abs(respData$RelTime  - 0))]
+     }
    respData <- respData[rowSums(is.na(respData))!=ncol(respData), ]
    respData
 })
@@ -415,24 +421,30 @@ burstData <- reactive({
     }
     if(!is.na(input$fileStart)){burstData <- burstData[burstData$Time > input$fileStart,]}
     if(!is.na(input$fileEnd)){burstData <- burstData[burstData$Time < input$fileEnd,]}
-    if(!is.na(input$protoStart)){burstData$Time <- burstData$Time - input$protoStart}
+    if(!is.na(input$protoStart)){
+      burstData$RelTime <- burstData$Time - input$protoStart
+      burstData$RelTime <-  burstData$RelTime - burstData$RelTime[which.min(abs(burstData$RelTime  - 0))]
+      }
     burstData <- burstData[rowSums(is.na(burstData))!=ncol(burstData), ]
     burstData
   }else{NULL}
 })
 
 # output variable selections ----------------------------------------------
-output$cvVarSelect <- renderUI({
+isolate(output$cvVarSelect <- renderUI({
   req(input$subjectId)
-  selectInput(inputId = "cvVarSelect", label = strong("Select CV File Variable"),choices = colnames(cvData()))
-})
+  selectInput(inputId = "cvVarSelect", label = strong("Select CV File Variable"),choices = colnames(cvData()),
+              selected = input$cvVarSelect)
+}))
 output$respVarSelect <- renderUI({
   req(input$subjectId)
-  selectInput(inputId = "respVarSelect", label = strong("Select Resp File Variable"),choices = colnames(respData()))
+  selectInput(inputId = "respVarSelect", label = strong("Select Resp File Variable"),choices = colnames(respData()),
+              selected = input$respVarSelect)
 })
 output$burstVarSelect <- renderUI({
   req(input$subjectId)
-  selectInput(inputId = "burstVarSelect", label = strong("Select Burst File Variable"),choices = colnames(burstData()))
+  selectInput(inputId = "burstVarSelect", label = strong("Select Burst File Variable"),choices = colnames(burstData()),
+              selected = input$burstVarSelect)
 })
 
 
@@ -480,8 +492,9 @@ burstCleanData <- reactive({
 output$cvRawplot <- renderPlot({
   req(input$cvVarSelect)
   cvData <- cvCleanData()
+  if(!is.na(input$protoStart)){xVar <- "RelTime"} else {xVar <- "Time"}
   ggplot(cvData, aes_string( 
-    x="Time",
+    x=xVar,
     y=input$cvVarSelect))+
     geom_point(colour='#e41a1c')+
     theme(axis.title.x=element_blank(),
@@ -500,8 +513,9 @@ height = function() {
 output$respRawplot <- renderPlot({
   req(input$respVarSelect)
   respData <- respCleanData()
+  if(!is.na(input$protoStart)){xVar <- "RelTime"} else {xVar <- "Time"}
   ggplot(respData, aes_string( 
-    x="Time",
+    x=xVar,
     y=input$respVarSelect))+
     geom_point(colour='#377eb8')+
     theme(axis.title.x=element_blank(),
@@ -519,8 +533,8 @@ output$burstRawplot <- renderPlot({
   if(!is.null(burstData())){
     req(input$burstVarSelect)
     burstData <- burstCleanData()
-
-    ggplot(burstData, aes_string(x="Time",
+    if(!is.na(input$protoStart)){xVar <- "RelTime"} else {xVar <- "Time"}
+    ggplot(burstData, aes_string(x=xVar,
                                  y=input$burstVarSelect))+
       geom_point(colour='#4daf4a')+
       theme(axis.title.x=element_blank(),
@@ -678,18 +692,30 @@ averageData <- reactive({
   if (!is.null(input$cvVars)){
     cvColRange <- which(!is.na(match(colnames(cvData), input$cvVars)))
   } else {cvColRange <- 1:ncol(cvData)}
-  cvTimeCol <- which(colnames(cvData) == "Time")
+  if(!is.na(input$protoStart)){
+    cvTimeCol <- which(colnames(cvData) == "RelTime")
+  }else{
+      cvTimeCol <- which(colnames(cvData) == "Time")
+  }
   if (!is.null(input$respVars)){
     respColRange <- which(!is.na(match(colnames(respData), input$respVars)))
   } else {respColRange <- 1:ncol(respData)}
-  respTimeCol <- which(colnames(respData) == "Time")
+  if(!is.na(input$protoStart)){
+    respTimeCol <- which(colnames(respData) == "RelTime")
+  }else{
+    respTimeCol <- which(colnames(respData) == "Time")
+  }
   
   if(!is.null(burstData())){
     burstData <- burstCleanData()
     if (!is.null(input$burstVars)){
       burstColRange <- which(!is.na(match(colnames(burstData), input$burstVars)))
     } else {burstColRange <- 1:ncol(burstData)}  
-    burstTimeCol <- which(colnames(burstData) == "Time")
+    if(!is.na(input$protoStart)){
+      burstTimeCol <- which(colnames(burstData) == "RelTime")
+    }else{
+      burstTimeCol <- which(colnames(burstData) == "Time")
+    }
     burstTimeCol <- burstTimeCol[1]
   }
 
@@ -700,12 +726,41 @@ averageData <- reactive({
   respColRange <- c(respTimeCol, respColRange)
   cvData <- cvData[, cvColRange]
   respData <- respData[, respColRange]
-  breaks <- seq(from = min(cvData$Time, na.rm = TRUE),
-                to = max(cvData$Time + input$bin, na.rm = TRUE), by = input$bin)
-  cvData <- mutate(cvData, bins = cut(cvData$Time,
-                                      breaks = breaks, include.lowest = TRUE))
-  respData <- mutate(respData, bins = cut(respData$Time,
-                                          breaks = breaks, include.lowest = TRUE))
+  if(is.na(input$protoStart)){
+    breaks <- seq(from = round(min(cvData$Time, na.rm = TRUE),0),
+                  to = round(max(cvData$Time + input$bin, na.rm = TRUE),0), by = input$bin)
+    cvData <- mutate(cvData, bins = cut(cvData$Time,
+                                        breaks = breaks, include.lowest = TRUE,
+                                        dig.lab = 5))
+    cvData$binStart <- as.numeric(substring(unlist(lapply(strsplit(as.character(cvData$bins),
+                                                                      split = ',', fixed = TRUE), '[[', 1)), 2))
+    respData <- mutate(respData, bins = cut(respData$Time,
+                                            breaks = breaks, include.lowest = TRUE,
+                                            dig.lab = 5))
+    respData$binStart <- as.numeric(substring(unlist(lapply(strsplit(as.character(respData$bins),
+                                                                   split = ',', fixed = TRUE), '[[', 1)), 2))
+    cvData <- cvData[,c((ncol(cvData)-1), (ncol(cvData)), 2:(ncol(cvData)-2))]
+    respData <- respData[,c((ncol(respData)-1), (ncol(respData)), 2:(ncol(respData)-2))]
+  } else{
+    breaks <- c(rev(seq(from = -input$bin, to = round(min(cvData$RelTime, na.rm = TRUE), 0)-input$bin, by = -input$bin)),
+            seq(from = 0, to = round(max(cvData$RelTime, na.rm = TRUE), 0)+input$bin, by = input$bin))
+    cvData <- mutate(cvData, bins = cut(cvData$RelTime,
+                                        breaks = breaks, include.lowest = TRUE,
+                                        dig.lab = 5))
+    cvData$relBinStart <- as.numeric(substring(unlist(lapply(strsplit(as.character(cvData$bins),
+                                                                   split = ',', fixed = TRUE), '[[', 1)), 2))
+    cvData$binStart <- input$protoStart + cvData$relBinStart
+    cvData <- cvData[, c((ncol(cvData) - 2):ncol(cvData), 2:(ncol(cvData) - 4))]
+    respData <- mutate(respData, bins = cut(respData$RelTime,
+                                            breaks = breaks, include.lowest = TRUE,
+                                            dig.lab = 5))
+    respData$relBinStart <- as.numeric(substring(unlist(lapply(strsplit(as.character(respData$bins),
+                                                                   split = ',', fixed = TRUE), '[[', 1)), 2))
+    respData$binStart <- input$protoStart + respData$relBinStart
+    respData <- respData[, c((ncol(respData) - 2):ncol(respData), 2:(ncol(respData) - 4))]
+
+  }
+
   cvDataMean <- summarise_all(group_by(cvData, bins),
                               funs(mean(., na.rm = TRUE)))
   cvDataSem <- summarise_all(group_by(cvData, bins),
@@ -720,18 +775,32 @@ averageData <- reactive({
   respDataMerge <- merge(respDataMean, respDataSem, by = "bins",
                          suffixes = c("_mean", "_sem"),
                          all = TRUE)
-  cvColOrder <- c(1,rep(seq(2, ncol(cvData)), each = 2))
-  cvColOrder[seq(3, length(cvColOrder), by = 2)] <- 
-    cvColOrder[seq(3, length(cvColOrder), by = 2)]+(ncol(cvDataMean)-1)
-  respColOrder <- c(1,rep(seq(2, ncol(respData)), each = 2))
-  respColOrder[seq(3, length(respColOrder), by = 2)] <-
-    respColOrder[seq(3, length(respColOrder), by = 2)]+(ncol(respDataMean)-1)
+  cvRem <- grep("binStart_sem", colnames(cvDataMerge))
+  respRem <- grep("binStart_sem", colnames(respDataMerge))
+  if(!is.na(input$protoStart)){
+    cvDataMerge <- cvDataMerge[,-c(cvRem, cvRem-1)]
+    respDataMerge <- respDataMerge[,-c(respRem, respRem-1)]
+    keepCols <- c(1:3)
+    startCols <- 4
+  } else{
+    cvDataMerge <- cvDataMerge[,-c(cvRem)]
+    respDataMerge <- respDataMerge[,-c(respRem)]
+    keepCols <- 1:2
+    startCols <- 3
+  }
+  
+  cvColOrder <- c(keepCols,rep(seq(startCols, ncol(cvData)), each = 2))
+  cvColOrder[seq(startCols+1, length(cvColOrder), by = 2)] <- 
+    cvColOrder[seq(startCols, length(cvColOrder), by = 2)]+(ncol(cvDataMean)-(startCols-1))
+  respColOrder <- c(keepCols,rep(seq(startCols, ncol(respData)), each = 2))
+  respColOrder[seq(startCols+1, length(respColOrder), by = 2)] <-
+    respColOrder[seq(startCols, length(respColOrder), by = 2)]+(ncol(respDataMean)-(startCols-1))
   cvDataMerge <- cvDataMerge[, cvColOrder]
   respDataMerge <- respDataMerge[, respColOrder]
-  cvDataMerge$nBeats <- as.data.frame(count(cvData, bins))[,2]
-  respDataMerge$nBreaths <- as.data.frame(count(respData, bins))[,2]
-  finalData <- merge(cvDataMerge[,c(1:2,4:ncol(cvDataMerge))],
-                     respDataMerge[,c(1,4:ncol(respDataMerge))], by = "bins",
+  cvDataMerge$nBeats <- as.data.frame(count(cvData, bins))[,2] # fix to cv count column
+  respDataMerge$nBreaths <- as.data.frame(count(respData, bins))[,2] # fix to resp count column
+  finalData <- merge(cvDataMerge[,c(keepCols,startCols:ncol(cvDataMerge))],
+                     respDataMerge[,c(1,startCols:ncol(respDataMerge))], by = "bins",
                      suffixes = c("", ""), all = TRUE)
   finalData <- finalData[which(complete.cases(finalData$bins)),]
   
@@ -739,25 +808,45 @@ averageData <- reactive({
     burstData[burstData == "#NUM!"] <- NA
     burstColRange <- c(burstTimeCol, burstColRange)
     burstData <- burstData[, burstColRange]
-    burstData$bins <- cut(burstData[,1],
-                          breaks = seq(from = min(cvData$Time, na.rm = TRUE),
-                                       to = max(cvData$Time + input$bin, na.rm = TRUE), by = input$bin),
-                          include.lowest = TRUE)
+    if(is.na(input$protoStart)){
+      burstData <- mutate(burstData, bins = cut(burstData$Time,
+                                          breaks = breaks, include.lowest = TRUE,
+                                          dig.lab = 5))
+      burstData$binStart <- as.numeric(substring(unlist(lapply(strsplit(as.character(burstData$bins),
+                                                                     split = ',', fixed = TRUE), '[[', 1)), 2))
+      burstData <- burstData[,c((ncol(burstData)-1), (ncol(burstData)), 2:(ncol(burstData)-2))]
+    } else{
+      burstData <- mutate(burstData, bins = cut(burstData$RelTime,
+                                          breaks = breaks, include.lowest = TRUE,
+                                          dig.lab = 5))
+      burstData$relBinStart <- as.numeric(substring(unlist(lapply(strsplit(as.character(burstData$bins),
+                                                                        split = ',', fixed = TRUE), '[[', 1)), 2))
+      burstData$binStart <- input$protoStart + burstData$relBinStart
+      burstData <- burstData[, c((ncol(burstData) - 2):ncol(burstData), 2:(ncol(burstData) - 4))]
+    }
     burstDataMean <- summarise_all(group_by(burstData, bins),
                                    funs(mean(., na.rm = TRUE)))
     burstDataSem <- summarise_all(group_by(burstData, bins),
                                   funs(std.error(., na.rm = TRUE)))
     burstDataMerge <- merge(burstDataMean, burstDataSem, by = "bins",
                             suffixes = c("_mean", "_sem"), all = TRUE)
-    burstColOrder <- c(1,rep(seq(2, ncol(burstData)), each = 2))
-    burstColOrder[seq(3, length(burstColOrder), by = 2)] <- 
-      burstColOrder[seq(3, length(burstColOrder), by = 2)]+(ncol(burstDataMean)-1)
+    burstRem <- grep("binStart_sem", colnames(burstDataMerge))
+    if(!is.na(input$protoStart)){
+      burstDataMerge <- burstDataMerge[,-c(burstRem, burstRem-1)]
+    } else{
+      burstDataMerge <- burstDataMerge[,-c(burstRem)]
+    }
+    burstColOrder <- c(keepCols,rep(seq(startCols, ncol(burstData)), each = 2))
+    burstColOrder[seq(startCols+1, length(burstColOrder), by = 2)] <- 
+      burstColOrder[seq(startCols, length(burstColOrder), by = 2)]+(ncol(burstDataMean)-(startCols-1))
     burstDataMerge <- burstDataMerge[, burstColOrder]
     burstDataMerge$nBursts <- as.data.frame(count(burstData, bins))[,2]
     finalData <- merge(finalData,
                        burstDataMerge[,c(1,4:ncol(burstDataMerge))], by = "bins",
                        suffixes = c("", ""), all = TRUE)
   }
+  colnames(finalData)[grep("binStart", colnames(finalData))] <- "bin_start"
+  colnames(finalData)[grep("relBinStart", colnames(finalData))] <- "rel_bin_start"
   zeroRoundmean <- paste(input$zeroRound, "_mean", sep = "")
   zeroRoundsem <-  paste(input$zeroRound, "_sem", sep = "")
   twoRoundmean <- paste(input$twoRound, "_mean", sep = "")
@@ -792,7 +881,7 @@ averageData <- reactive({
     dir.create(here::here("output", "cleanData"))
   }
   finalData <- finalData[which(complete.cases(finalData$bins)),]
-  finalData <- finalData[order(finalData$Time_mean),]
+  finalData <- finalData[order(finalData$bin_start),]
   finalData <- finalData[rowSums(is.na(finalData))!=ncol(finalData), ]
   finalData
 })
@@ -818,7 +907,12 @@ output$meanPlot1 <- renderPlot({
   avData <- averageData()
   keepAv    <- avData[ rxVals$meanKeepRows , , drop = FALSE]
   excludeAv <- avData[!rxVals$meanKeepRows , , drop = FALSE]
-  ggplot(keepAv, aes_string(x= "Time_mean", y=paste(input$plot1Var, "_mean",sep = ""))) +
+  if(!is.na(input$protoStart)){
+    xVar <- "rel_bin_start"  
+    }else{
+    xVar <- "bin_start"  
+    }
+  ggplot(keepAv, aes_string(x= xVar, y=paste(input$plot1Var, "_mean",sep = ""))) +
     geom_point(colour='black')+
     geom_point(data = excludeAv, color = "red") +
     coord_cartesian() +
@@ -986,8 +1080,10 @@ observeEvent(input$createMeanFigs,{
       figList <- list()
       df <- df[, which(colnames(df)%!in%c("nBeats", "nBreaths", "nBursts", "bins"))]
       z <- 1
+      xVar <- "bin_start"
+      if(length(grep("relBinStart", colnames(df)))>0){xVar <- "rel_bin_start"}
       for(j in seq(2, ncol(df), 2)){
-        figList[[z]] <-  ggplot(df, aes_string(x = "Time_mean", y=colnames(df)[j])) +
+        figList[[z]] <-  ggplot(df, aes_string(x = xVar, y=colnames(df)[j])) +
           geom_point(size = 0.65) + theme(axis.title.x = element_blank()) +
           geom_errorbar(aes_string(ymin = paste(colnames(df)[j], "-", colnames(df)[j+1]),
                                    ymax = paste(colnames(df)[j], "+", colnames(df)[j+1])),
