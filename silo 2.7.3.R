@@ -1064,9 +1064,6 @@ observeEvent(input$createRawFigs,{
     glist <- lapply(figList, ggplotGrob)
     ggsave(outFileName, marrangeGrob(grobs = glist, nrow=3, ncol=1))
   } 
-  
-
-   
 })
 
 # Save Mean Figures -----------------------------------------------------
