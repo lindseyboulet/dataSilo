@@ -881,7 +881,11 @@ averageData <- reactive({
     dir.create(here::here("output", "cleanData"))
   }
   finalData <- finalData[which(complete.cases(finalData$bins)),]
+<<<<<<< HEAD:silo 2.7.3.R
   finalData <- finalData[order(finalData$bin_start),]
+=======
+  finalData <- finalData[order(finalData$binStart_mean),]
+>>>>>>> af3850182f063064d53ad8525d2970b5963bf29e:silo 2.7.3.R
   finalData <- finalData[rowSums(is.na(finalData))!=ncol(finalData), ]
   finalData
 })
@@ -908,9 +912,15 @@ output$meanPlot1 <- renderPlot({
   keepAv    <- avData[ rxVals$meanKeepRows , , drop = FALSE]
   excludeAv <- avData[!rxVals$meanKeepRows , , drop = FALSE]
   if(!is.na(input$protoStart)){
+<<<<<<< HEAD:silo 2.7.3.R
     xVar <- "rel_bin_start"  
     }else{
     xVar <- "bin_start"  
+=======
+    xVar <- "relBinStart_mean"  
+    }else{
+    xVar <- "binStart_mean"  
+>>>>>>> af3850182f063064d53ad8525d2970b5963bf29e:silo 2.7.3.R
     }
   ggplot(keepAv, aes_string(x= xVar, y=paste(input$plot1Var, "_mean",sep = ""))) +
     geom_point(colour='black')+
