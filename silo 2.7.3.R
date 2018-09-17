@@ -36,6 +36,7 @@ ui <- dashboardPage(skin = "black",
                                                      textInput("appendTag", label = "Append Tag", value = NULL)
                                     ),
                                     actionButton("updateFileList", "Update File List")
+                                    # actionButton("resetAll", "Reset All Fields")
       ),      
              dashboardBody(
               tabsetPanel(
@@ -181,7 +182,7 @@ ui <- dashboardPage(skin = "black",
                         ),
                         column(2,
                                selectInput(inputId = "plot1Var", label = strong("Variable"),
-                                           choices = NULL)
+                                           choices = NULL, selected = input$plot1Var)
                         ),
                         column(2,
                                numericInput(inputId = "av1Ymin", label = strong("Y-Min"),
@@ -240,8 +241,8 @@ ui <- dashboardPage(skin = "black",
                         
                       ),
                       fluidRow(
-                        column(12,actionButton('saveSelect', 'Selected Data'),
-                               actionButton("exclude_reset4", "Reset"))
+                        column(12,actionButton('saveSelect', 'Selected Data'))
+                               # actionButton("exclude_reset4", "Reset"))
                       )
              )
              )
@@ -842,7 +843,7 @@ averageData <- reactive({
     burstDataMerge <- burstDataMerge[, burstColOrder]
     burstDataMerge$nBursts <- as.data.frame(count(burstData, bins))[,2]
     finalData <- merge(finalData,
-                       burstDataMerge[,c(1,4:ncol(burstDataMerge))], by = "bins",
+                       burstDataMerge[,c(1,startCols:ncol(burstDataMerge))], by = "bins",
                        suffixes = c("", ""), all = TRUE)
   }
   colnames(finalData)[grep("binStart", colnames(finalData))] <- "bin_start"
