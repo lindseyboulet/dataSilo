@@ -181,7 +181,7 @@ ui <- dashboardPage(skin = "black",
                         ),
                         column(2,
                                selectInput(inputId = "plot1Var", label = strong("Variable"),
-                                           choices = NULL, selected = input$plot1Var)
+                                           choices = NULL)
                         ),
                         column(2,
                                numericInput(inputId = "av1Ymin", label = strong("Y-Min"),
