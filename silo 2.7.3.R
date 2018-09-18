@@ -132,7 +132,6 @@ ui <- dashboardPage(skin = "black",
                  column(1, 
                         actionButton('resetPlot3', "Reset"))
                ),
-               
                h4(strong("")),
                fluidRow(
                  column(10,
