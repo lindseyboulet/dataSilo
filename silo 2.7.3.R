@@ -1078,8 +1078,9 @@ observeEvent(input$createMeanFigs,{
       df <- df[, which(colnames(df)%!in%c("nBeats", "nBreaths", "nBursts", "bins"))]
       z <- 1
       xVar <- "bin_start"
-      if(length(grep("relBinStart", colnames(df)))>0){xVar <- "rel_bin_start"}
-      for(j in seq(2, ncol(df), 2)){
+      start <- 2
+      if(length(grep("rel_bin_start", colnames(df)))>0){xVar <- "rel_bin_start"; start <- 3}
+      for(j in seq(start, ncol(df), 2)){
         figList[[z]] <-  ggplot(df, aes_string(x = xVar, y=colnames(df)[j])) +
           geom_point(size = 0.65) + theme(axis.title.x = element_blank()) +
           geom_errorbar(aes_string(ymin = paste(colnames(df)[j], "-", colnames(df)[j+1]),
