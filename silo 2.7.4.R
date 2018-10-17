@@ -146,7 +146,7 @@ ui <- dashboardPage(skin = "black",
                         verbatimTextOutput("hover_info3"))
                ),
                fluidRow(
-                 column(6, actionButton("exclude_toggle3", "Exclued Points"),
+                 column(6, actionButton("exclude_toggle3", "Exclude Points"),
                         actionButton("exclude_reset3", "Reset"))
                  )
              )
@@ -210,35 +210,11 @@ ui <- dashboardPage(skin = "black",
                       br(),
                       br(),
                       fluidRow(
-                        column(1, numericInput(inputId = "noStages", 
-                                               value = 0,
-                                               label = strong("# stages"))),
-                        column(1, conditionalPanel(condition = "input.noStages >=1",
-                                                   textInput(inputId = "st1", 
-                                                             value = NULL,
-                                                             label = strong("Stage 1")))),
-                        column(1, conditionalPanel(condition = "input.noStages >=2",
-                                                   textInput(inputId = "st2", 
-                                                             value = NULL,
-                                                             label = strong("Stage 2")))),
-                        column(1, conditionalPanel(condition = "input.noStages >=3",
-                                                   textInput(inputId = "st3", 
-                                                             value = NULL,
-                                                             label = strong("Stage 3")))),
-                        column(1, conditionalPanel(condition = "input.noStages >=4",
-                                                   textInput(inputId = "st4", 
-                                                             value = NULL,
-                                                             label = strong("Stage 4")))),
-                        column(1, conditionalPanel(condition = "input.noStages >=5",
-                                                   textInput(inputId = "st5", 
-                                                             value = NULL,
-                                                             label = strong("Stage 5")))),
-                        column(1, conditionalPanel(condition = "input.noStages >=6",
-                                                   textInput(inputId = "st6", 
-                                                             value = NULL,
-                                                             label = strong("Stage 6"))))
-                        
+                      column(1, 
+                             numericInput(inputId = "noStages", value = 1, label = strong("# Stages"),
+                                   min = 1))
                       ),
+                      fluidPage(uiOutput("stageIns")),
                       fluidRow(
                         column(12,actionButton('saveSelect', 'Selected Data'))
                                # actionButton("exclude_reset4", "Reset"))
@@ -912,7 +888,7 @@ output$meanPlot1 <- renderPlot({
     }else{
     xVar <- "bin_start"  
     }
-  ggplot(keepAv, aes_string(x= xVar, y=paste(input$plot1Var, "_mean",sep = ""))) +
+  p1 <- ggplot(keepAv, aes_string(x= xVar, y=paste(input$plot1Var, "_mean",sep = ""))) +
     geom_point(colour='black')+
     geom_point(data = excludeAv, color = "red") +
     coord_cartesian() +
@@ -923,6 +899,11 @@ output$meanPlot1 <- renderPlot({
     scale_x_continuous(limits = c(input$av1Xmin, input$av1Xmax)) +
     theme(plot.margin=unit(c(0,0,0,0),"mm"), axis.title.y = element_blank(),
           axis.title.x=element_blank())
+  if(nrow(excludeAv) > 0){
+    p1 <- p1 + geom_text(data = excludeAv, color = "red",
+                         aes(label = 1:nrow(excludeAv)), position = position_nudge(x =input$bin/2))
+    }
+  p1
 },
 height = function() {
   session$clientData$output_meanPlot1_width/3}
@@ -938,17 +919,30 @@ observeEvent(input$exclude_reset4, {
   rxVals$meanKeepRows  <- rep(TRUE, nrow(isolate(averageData())))
 })
 
+
+# dynamic text input ------------------------------------------------------
+output$stageIns <- renderUI({
+  validate(need(input$noStages>0, "Must be at least one!"))
+  pvars <- 1:input$noStages
+  lapply(seq(pvars), function(i) {
+    column(1,textInput(inputId = paste0("st", pvars[i]),
+                label = paste("Stage",pvars[i])))
+  })
+  
+})
+
 # Reactive Select Data -------------------------------------------------------------
 selectData <- reactive({
   avData <- averageData()
   selectedAv <- avData[!rxVals$meanKeepRows , , drop = FALSE]
   selectedAv[rowSums(is.na(selectedAv))!=ncol(selectData), ]
   if(input$noStages > 0){
-    stages <- c(input$st1, input$st2, input$st3,
-                input$st4, input$st5, input$st6)
-    stagesFinal <- vector()
-    for(i in 1:input$noStages){stagesFinal <- c(stagesFinal, stages[i])}
-    selectedAv$stage <-rep(stagesFinal, length.out=nrow(selectedAv))
+    inVal <- paste0("st", 1:input$noStages)
+    stages <- character(0)
+    for(i in inVal){
+      stages <- append(stages, input[[i]])
+      }
+    selectedAv$stage <-rep(stages, length.out=nrow(selectedAv))
   }
   selectedAv <- selectedAv[rowSums(is.na(selectedAv))!=ncol(selectedAv), ]
   selectedAv[,c(1:2,ncol(selectedAv), 3:(ncol(selectedAv)-1)) ]
