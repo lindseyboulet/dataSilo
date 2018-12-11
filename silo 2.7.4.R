@@ -901,7 +901,7 @@ output$meanPlot1 <- renderPlot({
           axis.title.x=element_blank())
   if(nrow(excludeAv) > 0){
     p1 <- p1 + geom_text(data = excludeAv, color = "red",
-                         aes(label = 1:nrow(excludeAv)), position = position_nudge(x =input$bin/2))
+                         aes(label = 1:nrow(excludeAv)), position = position_nudge(x =input$bin/1.5))
     }
   p1
 },
@@ -935,7 +935,7 @@ output$stageIns <- renderUI({
 selectData <- reactive({
   avData <- averageData()
   selectedAv <- avData[!rxVals$meanKeepRows , , drop = FALSE]
-  selectedAv[rowSums(is.na(selectedAv))!=ncol(selectData), ]
+  selectedAv[rowSums(is.na(selectedAv))!=ncol(selectedAv), ]
   if(input$noStages > 0){
     inVal <- paste0("st", 1:input$noStages)
     stages <- character(0)
@@ -945,7 +945,8 @@ selectData <- reactive({
     selectedAv$stage <-rep(stages, length.out=nrow(selectedAv))
   }
   selectedAv <- selectedAv[rowSums(is.na(selectedAv))!=ncol(selectedAv), ]
-  selectedAv[,c(1:2,ncol(selectedAv), 3:(ncol(selectedAv)-1)) ]
+  selectedAv
+  # [,c(1:2,ncol(selectedAv), 3:(ncol(selectedAv)-1)) ]
 })
 
 # output filename
