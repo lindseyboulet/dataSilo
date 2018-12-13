@@ -663,18 +663,21 @@ output$twoRound <- renderUI({
 
 # Averaging and merging data ----------------------------------------------
 averageData <- reactive({
+  # validate(need(input$plot1Var, "Must be at least one!"))
   cvData <- cvCleanData()
   respData <- respCleanData()
-  if (!is.null(input$cvVars)){
-    cvColRange <- which(!is.na(match(colnames(cvData), input$cvVars)))
+  cvVars <- isolate(input$cvVars); respVars <- isolate(input$respVars)
+  input$plot1Var
+  if (!is.null(cvVars)){
+    cvColRange <- which(!is.na(match(colnames(cvData), cvVars)))
   } else {cvColRange <- 1:ncol(cvData)}
   if(!is.na(input$protoStart)){
     cvTimeCol <- which(colnames(cvData) == "RelTime")
   }else{
       cvTimeCol <- which(colnames(cvData) == "Time")
   }
-  if (!is.null(input$respVars)){
-    respColRange <- which(!is.na(match(colnames(respData), input$respVars)))
+  if (!is.null(respVars)){
+    respColRange <- which(!is.na(match(colnames(respData), respVars)))
   } else {respColRange <- 1:ncol(respData)}
   if(!is.na(input$protoStart)){
     respTimeCol <- which(colnames(respData) == "RelTime")
@@ -726,17 +729,17 @@ averageData <- reactive({
     cvData$relBinStart <- as.numeric(substring(unlist(lapply(strsplit(as.character(cvData$bins),
                                                                    split = ',', fixed = TRUE), '[[', 1)), 2))
     cvData$binStart <- input$protoStart + cvData$relBinStart
-    cvData <- cvData[, c((ncol(cvData) - 2):ncol(cvData), 2:(ncol(cvData) - 4))]
+    cvData <- cvData[, c(grep("bin",colnames(cvData), ignore.case = TRUE), which(colnames(cvData) %in% cvVars))]
     respData <- mutate(respData, bins = cut(respData$RelTime,
                                             breaks = breaks, include.lowest = TRUE,
                                             dig.lab = 5))
     respData$relBinStart <- as.numeric(substring(unlist(lapply(strsplit(as.character(respData$bins),
                                                                    split = ',', fixed = TRUE), '[[', 1)), 2))
     respData$binStart <- input$protoStart + respData$relBinStart
-    respData <- respData[, c((ncol(respData) - 2):ncol(respData), 2:(ncol(respData) - 4))]
+    respData <- respData[, c(grep("bin",colnames(respData), ignore.case = TRUE), which(colnames(respData) %in% respVars))]
 
   }
-
+ 
   cvDataMean <- summarise_all(group_by(cvData, bins),
                               funs(mean(., na.rm = TRUE)))
   cvDataSem <- summarise_all(group_by(cvData, bins),
@@ -764,21 +767,21 @@ averageData <- reactive({
     keepCols <- 1:2
     startCols <- 3
   }
-  
-  cvColOrder <- c(keepCols,rep(seq(startCols, ncol(cvData)), each = 2))
-  cvColOrder[seq(startCols+1, length(cvColOrder), by = 2)] <- 
-    cvColOrder[seq(startCols, length(cvColOrder), by = 2)]+(ncol(cvDataMean)-(startCols-1))
-  respColOrder <- c(keepCols,rep(seq(startCols, ncol(respData)), each = 2))
-  respColOrder[seq(startCols+1, length(respColOrder), by = 2)] <-
-    respColOrder[seq(startCols, length(respColOrder), by = 2)]+(ncol(respDataMean)-(startCols-1))
+  cvM <- grep("*_mean",colnames(cvDataMerge)[startCols:ncol(cvDataMerge)]) + startCols-1
+  cvS <- grep("*_sem",colnames(cvDataMerge)[startCols:ncol(cvDataMerge)]) + startCols-1
+  cvColOrder <- c(keepCols, c(rbind(cvM, cvS)))
+  respM <- grep("*_mean",colnames(respDataMerge)[startCols:ncol(respDataMerge)]) + startCols-1
+  respS <- grep("*_sem",colnames(respDataMerge)[startCols:ncol(respDataMerge)]) + startCols-1
+  respColOrder <- c(keepCols, c(rbind(respM, respS)))
+  if(ncol(cvDataMerge)<length(cvColOrder)){cvColOrder <- 1:ncol(cvDataMerge)}
   cvDataMerge <- cvDataMerge[, cvColOrder]
+  if(ncol(respDataMerge)<length(respColOrder)){respColOrder <- 1:ncol(respDataMerge)}
   respDataMerge <- respDataMerge[, respColOrder]
   cvDataMerge$nBeats <- as.data.frame(count(cvData, bins))[,2] # fix to cv count column
   respDataMerge$nBreaths <- as.data.frame(count(respData, bins))[,2] # fix to resp count column
-  finalData <- merge(cvDataMerge[,c(keepCols,startCols:ncol(cvDataMerge))],
-                     respDataMerge[,c(1,startCols:ncol(respDataMerge))], by = "bins",
-                     suffixes = c("", ""), all = TRUE)
-  finalData <- finalData[which(complete.cases(finalData$bins)),]
+  finalData <- merge(cvDataMerge,
+                     respDataMerge, suffixes = c("", ""), all = TRUE)
+  # finalData <- finalData[which(complete.cases(finalData$bins)),]
   
   if(!is.null(burstData())){
     burstData[burstData == "#NUM!"] <- NA
@@ -798,7 +801,7 @@ averageData <- reactive({
       burstData$relBinStart <- as.numeric(substring(unlist(lapply(strsplit(as.character(burstData$bins),
                                                                         split = ',', fixed = TRUE), '[[', 1)), 2))
       burstData$binStart <- input$protoStart + burstData$relBinStart
-      burstData <- burstData[, c((ncol(burstData) - 2):ncol(burstData), 2:(ncol(burstData) - 4))]
+      burstData <- burstData[, c(grep("bin",colnames(burstData), ignore.case = TRUE), which(input$burstVars %in% colnames(burstData)))]
     }
     burstDataMean <- summarise_all(group_by(burstData, bins),
                                    funs(mean(., na.rm = TRUE)))
@@ -829,13 +832,13 @@ averageData <- reactive({
   twoRoundsem <-  paste(input$twoRound, "_sem", sep = "")
   
   if(!is.null(burstData())){
-    oneRoundmean <- paste(c(input$respVars,
-                            input$cvVars, input$burstVars), "_mean", sep = "")
-    oneRoundsem  <-  paste(c(input$respVars,
-                             input$cvVars, input$burstVars), "_sem", sep = "")
+    oneRoundmean <- paste(c(respVars,
+                            cvVars, input$burstVars), "_mean", sep = "")
+    oneRoundsem  <-  paste(c(respVars,
+                             cvVars, input$burstVars), "_sem", sep = "")
   } else {
-    oneRoundmean <- paste(c(input$respVars, input$cvVars), "_mean", sep = "")
-    oneRoundsem  <-  paste(c(input$respVars, input$cvVars), "_sem", sep = "")
+    oneRoundmean <- paste(c(respVars, cvVars), "_mean", sep = "")
+    oneRoundsem  <-  paste(c(respVars, cvVars), "_sem", sep = "")
   }
   zeroDigRange <- which(!is.na(match(colnames(finalData), c(zeroRoundmean, zeroRoundsem))))
   twoDigRange <- which(!is.na(match(colnames(finalData),  c(twoRoundmean, twoRoundsem))))
@@ -857,7 +860,7 @@ averageData <- reactive({
     dir.create(here::here("output", "cleanData"))
   }
   finalData <- finalData[which(complete.cases(finalData$bins)),]
-  finalData <- finalData[order(finalData$bin_start),]
+  # finalData <- finalData[order(finalData$binStart_mean),]
   finalData <- finalData[rowSums(is.na(finalData))!=ncol(finalData), ]
   finalData
 })
@@ -866,9 +869,11 @@ averageData <- reactive({
 # create y var selections
 observe({
   if(!is.null(burstData())){
-    updateSelectInput(session,"plot1Var",choices=c(input$cvVars,input$respVars,input$burstVars))
+    updateSelectInput(session,"plot1Var",choices=c(input$cvVars,input$respVars,input$burstVars),
+                      selected = NULL)
   } else{
-    updateSelectInput(session,"plot1Var",choices=c(input$cvVars,input$respVars))
+    updateSelectInput(session,"plot1Var",choices=c(input$cvVars,input$respVars),
+                      selected = NULL)
   }
 })
 
