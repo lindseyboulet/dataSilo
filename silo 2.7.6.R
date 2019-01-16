@@ -260,6 +260,7 @@ server <- function(input, output, session) {
         df <- read.delim(fileName)
         row1 <- data.frame(lapply(df[1,], as.character), stringsAsFactors=FALSE)
         colnames(df)[which(!is.na(match(row1, "Time")))] <- "Time"
+        colnames(df)[which(!is.na(match(row1, "Cmt Text")))] <- "cmt"
         df <- df[-(1:2),]
       }
       return(df)
@@ -351,7 +352,9 @@ cvData <- reactive({
     cvRawTimeCol <- cvRawTimeCol[1]
   }
   cvData <- data.frame(lapply(cvData, as.character), stringsAsFactors=FALSE)
+  if(length(grep("cmt",colnames(cvData)))>0){cmtData <- cvData$cmt} 
   suppressWarnings(cvData <- data.frame(lapply(cvData, as.numeric), stringsAsFactors=FALSE))
+  if(length(grep("cmt",colnames(cvData)))>0){cvData$cmt <- cmtData} 
   colnames(cvData)[cvRawTimeCol] <- "Time"
   if(!is.na(input$fileStart)){cvData <- cvData[cvData$Time >= input$fileStart,]}
   if(!is.na(input$fileEnd)){cvData <- cvData[cvData$Time <= input$fileEnd,]}
@@ -535,7 +538,7 @@ observeEvent(input$plot1_click, {
 # Toggle points that are brushed, when button is clicked on plot 1
 observeEvent(input$exclude_toggle, {
   res <- brushedPoints(cvData(), input$plot1_brush, allRows = TRUE)
-  rxVals$cvKeepRows[input$cvVarSelect][which(res$selected_==TRUE),1] <- 01
+  rxVals$cvKeepRows[input$cvVarSelect][which(res$selected_==TRUE),1] <- 0
 })
 # Hover for plot 1
 output$hover_info1 <- renderPrint({
