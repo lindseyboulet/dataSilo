@@ -58,11 +58,11 @@ ui <- dashboardPage(skin = "black",
                              uiOutput("diaVar")
                       ),
                       column(1,
-                             numericInput(inputId = "xmin", label = strong("X-Min"),
+                             numericInput(inputId = "diaxmin", label = strong("X-Min"),
                                           value = NULL)
                       ),
                       column(1,
-                             numericInput(inputId = "xmax", label = strong("X-Max"),
+                             numericInput(inputId = "diaxmax", label = strong("X-Max"),
                                           value = NULL)
                       )
                     ),
@@ -221,8 +221,7 @@ fileNames <- reactive({
   }
   fileNames <- paste(here::here("rawData"), useFileID, sep = "/")
   validate(
-    need(file.exists(fileNames[1]), paste("File doesn't exist!")),
-    need(file.exists(fileNames[2]), paste("File doesn't exist!"))
+    need(file.exists(fileNames[1]), paste("File doesn't exist!"))
     )
     rxVals$sysCorrFac <- NULL; rxVals$sysInputs <- NULL; rxVals$diaInputs <- NULL
     fileNames
@@ -396,7 +395,7 @@ observeEvent(input$blReset, {
 
 # dynamic select text input ------------------------------------------------------
 output$numCors <- renderUI({
-  if(!is.null(rxVals$sysInputs)){startVal <- length(rxVals$sysInputs)}else{startVal <- 1}
+  if(!is.null(rxVals$sysInputsNu)){startVal <- length(rxVals$sysInputs)}else{startVal <- 3}
   numericInput(inputId = "noCorrs", value = startVal, label = strong("# of Manual BPs"),
                min = 1)
 })
