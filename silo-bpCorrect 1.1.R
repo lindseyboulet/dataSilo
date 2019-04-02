@@ -249,8 +249,8 @@ cvData <- reactive({
   rxVals$sysInputs <- as.numeric(unlist(lapply(strsplit(substr(bpsCmts, 7, nchar(bpsCmts)), "/"), '[[',1)))
   rxVals$diaInputs <- as.numeric(unlist(lapply(strsplit(substr(bpsCmts, 7, nchar(bpsCmts)), "/"), '[[',2)))
   if(!is.null(rxVals$sysCorrFac)){
-    cvData$SBP_corr <- cvData$SBP - rxVals$sysCorrFac
-    cvData$DBP_corr <- cvData$DBP - rxVals$diaCorrFac
+    cvData$SBP_corr <- cvData[,input$sysVar] - rxVals$sysCorrFac
+    cvData$DBP_corr <- cvData[,input$diaVar] - rxVals$diaCorrFac
     cvData$MAP_corr <- (cvData$SBP*1/3)+(cvData$DBP*2/3)
   }
   if(!is.na(input$fileStart)){cvData <- cvData[cvData$Time >= input$fileStart,]}
