@@ -246,8 +246,8 @@ cvData <- reactive({
   colnames(cvData)[cvRawTimeCol] <- "Time"
   cvData <- cvData[rowSums(is.na(cvData))!=ncol(cvData), ]
   bpsCmts <- unique(cvData$cmt[grep("bpCor",cvData$cmt)])
-  rxVals$sysInputs <- as.numeric(unlist(lapply(strsplit(substr(bpsCmts, 7, nchar(bpsCmts)), "/"), '[[',1)))
-  rxVals$diaInputs <- as.numeric(unlist(lapply(strsplit(substr(bpsCmts, 7, nchar(bpsCmts)), "/"), '[[',2)))
+  rxVals$sysInputs <- as.numeric(unlist(lapply(strsplit(substr(bpsCmts, sapply(regexec('\\d', bpsCmts), '[[', 1), nchar(bpsCmts)), "/"), '[[',1)))
+  rxVals$diaInputs <- as.numeric(unlist(lapply(strsplit(substr(bpsCmts, sapply(regexec('\\d', bpsCmts), '[[', 1), nchar(bpsCmts)), "/"), '[[',2)))
   if(!is.null(rxVals$sysCorrFac)){
     cvData$SBP_corr <- cvData[,input$sysVar] - rxVals$sysCorrFac
     cvData$DBP_corr <- cvData[,input$diaVar] - rxVals$diaCorrFac
