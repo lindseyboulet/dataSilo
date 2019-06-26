@@ -14,7 +14,7 @@ Required ibraries download automatically
 
 ### File Extraction from LabChart
 
-1. Set O[2] and CO[2] delays in labchart
+1. Set O<sub>2</sub> and CO<sub>2</sub> delays in labchart
 
 #### Carviovascular and Respiratory Files
 
@@ -27,8 +27,7 @@ Required ibraries download automatically
 3. Setting **Event Markers**<br>
     **Respiratory** - need event markers on Volume channel 
     **Cardiovascular** - need event markers on Finometer (systolic) or ECG (R-Wave) trace
-4. **(optional)** Shift the %O[2] and %CO[2] channel - not necessary if using air force calibration app    
-5. Add data to Data Pad - *Respiratory*
+4. Add data to Data Pad - *Respiratory*
       - Highlight section to be extracted
       - Select **multi-add to Data Pad**
       - Find using: **Event Marker**
@@ -39,7 +38,7 @@ Required ibraries download automatically
       - Click the **File** > **Export..**
       - Save as type: **Data Pad Only as Test File**
       - Name file based on naming convention (below)
-6. Repeat step 5. for **Cardiovascular** data 
+5. Repeat step 5. for **Cardiovascular** data 
       - From channel: **ECG** or **Finometer**
       
 #### MSNA Files (Optional)
