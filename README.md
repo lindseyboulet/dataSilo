@@ -14,7 +14,7 @@ Required ibraries download automatically
 
 ### File Extraction from LabChart
 
-1. Set O<sub>2</sub> and CO<sub>2</sub> delays in labchart
+1. Set O<sub>2</sub> and CO<sub>2</sub> delays in labchart - optional - use if you don't have Airforce auto calibrate app
 
 #### Carviovascular and Respiratory Files
 
